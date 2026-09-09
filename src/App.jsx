@@ -48,7 +48,7 @@ function VideoPanel({ src, poster, caption }) {
 }
 
 /* ---------- P1 封面（借鉴 typermonkie hero） ---------- */
-function CoverPage({ go }) {
+function CoverPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
       {/* 背景：粒子 + 环境圆环 */}
@@ -81,11 +81,6 @@ function CoverPage({ go }) {
         </div>
 
         <p className="muted mt-7 text-xs md:text-sm tracking-[.18em]">沙也涵 · 王翊泽 · 吴泓谕</p>
-
-        <button onClick={() => go(1)}
-          className="mt-8 rounded-full border border-white/10 bg-white/[0.06] px-6 py-2.5 text-sm text-white/85 transition hover:border-accent/60 hover:text-accent">
-          下一页 · 目录 →
-        </button>
       </div>
 
       {/* 底部状态行 */}
@@ -105,29 +100,25 @@ const toc = [
   { n: '③', title: '算法', desc: '巡线 / 避障 / 推球 —— 自适应阈值 + 多反馈 + 动态 HSV', tag: 'VISION', color: 'text-[#ffd166] border-[#ffd166]/40' },
 ]
 
-function TocPage({ go }) {
+function TocPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24">
       <p className="eyebrow"><span />CONTENTS</p>
       <h2 className="content-title mt-4">目录 · 三个创新点</h2>
-      <p className="muted mt-3 text-xs tracking-[.2em]">按 ← → 或点击卡片切换</p>
+      <p className="muted mt-3 text-xs tracking-[.2em]">按 ← → 翻页</p>
 
       <div className="mt-10 grid w-full max-w-5xl gap-4 md:grid-cols-3">
-        {toc.map((t, i) => (
-          <button key={t.n} onClick={() => go(i + 2)}
-            className={`group rounded-2xl border bg-white/[0.04] p-6 text-left backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.07] ${t.color}`}>
+        {toc.map((t) => (
+          <div key={t.n}
+            className={`rounded-2xl border bg-white/[0.04] p-6 text-left backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.07] ${t.color}`}>
             <div className="flex items-center justify-between">
               <span className="text-3xl font-light">{t.n}</span>
               <span className="rounded-full border px-2.5 py-0.5 text-[.6rem] tracking-[.2em]">{t.tag}</span>
             </div>
             <div className="mt-4 text-xl font-light text-white">{t.title}</div>
             <div className="mt-2 text-sm text-white/60 leading-relaxed">{t.desc}</div>
-          </button>
+          </div>
         ))}
-      </div>
-
-      <div className="mt-10 flex gap-6 text-white/70">
-        <button onClick={() => go(0)} className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm transition hover:border-accent/60 hover:text-accent">‹ 返回封面</button>
       </div>
     </div>
   )
@@ -428,23 +419,8 @@ export default function App() {
         <Active go={go} />
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 z-20 flex items-center justify-center gap-4">
-        <button onClick={() => go(page - 1)} disabled={page === 0}
-          className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/85 transition hover:border-accent/60 hover:text-accent disabled:opacity-30">‹ 上一页</button>
-
-        <div className="flex gap-2">
-          {pages.map((_, i) => (
-            <button key={i} onClick={() => go(i)} aria-label={`第${i + 1}页`}
-              className={`h-3 w-3 rounded-full transition ${i === page ? 'scale-125 bg-accent' : 'bg-white/30 hover:bg-white/50'}`} />
-          ))}
-        </div>
-
-        <button onClick={() => go(page + 1)} disabled={page === pages.length - 1}
-          className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/85 transition hover:border-accent/60 hover:text-accent disabled:opacity-30">下一页 ›</button>
-      </div>
-
-      <div className="fixed bottom-3 right-4 z-20 text-xs text-white/40">{page + 1} / {pages.length}</div>
-      <div className="fixed bottom-3 left-4 z-20 text-xs text-white/35">← → 翻页 · 空格下一页</div>
+      {/* 左下角：按键翻页提示 */}
+      <div className="fixed bottom-4 left-4 z-20 text-xs text-white/35">← → 翻页 · 空格下一页 · Home/End 首末</div>
     </div>
   )
 }
