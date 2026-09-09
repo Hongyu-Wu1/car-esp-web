@@ -1,27 +1,35 @@
-// Git 历史"仙人掌"图：
+// Git 历史分支图：
 //  中间一条横线 = main（长期主线）
-//  上下长出分支像仙人掌手臂：完整手臂=分出去又合回 main（成环）；断头=被放弃/删除（终点圆点）
+//  分支按"距 line 的距离"分层，越远越"往外走"：
+//    绿色(最近的主线) = 已并入 main；黄色(稍高) = 创新任务；红色(最高) = 断头/被放弃
 export default function GitGraph() {
-  const mid = 210
+  const mid = 190
   const mainStart = 50
   const mainEnd = 950
 
+  // 颜色：绿色=已并入 main；黄色=创新任务；玫红=断头/被放弃
+  // depth：green 52（离 main 最近）、yellow 88（高一点）、red 122（再高一些）
   const arms = [
-    { x: 170, dir: -1, depth: 95,  x2: 240, merge: false, label: 'feat/line-follow',       kind: 'dead' },
-    { x: 210, dir: 1,  depth: 100, x2: 285, merge: false, label: 'grid ✕ 作废',           kind: 'dead' },
-    { x: 320, dir: -1, depth: 110, x2: 470, merge: true,  label: 'feat-camera-line-follow', kind: 'merge' },
-    { x: 440, dir: 1,  depth: 85,  x2: 540, merge: true,  label: 'simple-version',        kind: 'merge' },
-    { x: 575, dir: -1, depth: 150, x2: 815, merge: true,  label: 'feat-follow-line-and-kick-ball', kind: 'current' },
-    { x: 690, dir: 1,  depth: 80,  x2: 760, merge: true,  label: 'tested/car-esp-newest', kind: 'merge' },
-    { x: 858, dir: -1, depth: 105, x2: 922, merge: false, label: 'weektwo ✕ 已删',        kind: 'dead' },
+    // 上方一排（上臂）
+    { x: 110, dir: -1, depth: 52, x2: 190, merge: true,  label: 'line-follow',           kind: 'merge' },
+    { x: 260, dir: -1, depth: 60, x2: 420, merge: true,  label: 'camera-line',           kind: 'merge' },
+    { x: 500, dir: -1, depth: 52, x2: 575, merge: true,  label: 'weekone',               kind: 'merge' },
+    { x: 630, dir: -1, depth: 62, x2: 800, merge: true,  label: 'kick-ball',             kind: 'merge' },
+    { x: 850, dir: -1, depth: 88, x2: 925, merge: true,  label: 'codex',                 kind: 'task' },
+    // 下方一排（下臂）
+    { x: 130, dir: 1,  depth: 52, x2: 200, merge: true,  label: 'pin-table',             kind: 'merge' },
+    { x: 320, dir: 1,  depth: 52, x2: 395, merge: true,  label: 'simple',                kind: 'merge' },
+    { x: 480, dir: 1,  depth: 88, x2: 555, merge: true,  label: 'gesture',               kind: 'task' },
+    { x: 660, dir: 1,  depth: 122, x2: 730, merge: false, label: 'grid ✕',               kind: 'dead' },
+    { x: 860, dir: 1,  depth: 122, x2: 930, merge: false, label: 'weektwo ✕',            kind: 'dead' },
   ]
 
   const color = (kind) =>
-    kind === 'dead' ? '#fb7185' : kind === 'current' ? '#ffd166' : '#62f1d1'
+    kind === 'dead' ? '#fb7185' : kind === 'task' ? '#ffd166' : '#34d399'
 
   return (
-    <svg viewBox="0 0 1000 420" className="w-full h-auto select-none" role="img"
-      aria-label="git 分支历史：中间为 main 主线，上下为过程分支，成环=已合回，断头=被放弃">
+    <svg viewBox="0 0 1000 350" className="w-full h-auto select-none" role="img"
+      aria-label="git 分支历史：中间为 main 主线，上下为过程分支，成环=已并入 main，断头=被放弃">
       {/* main 主线 */}
       <line x1={mainStart} y1={mid} x2={mainEnd} y2={mid} stroke="#aab4c0" strokeWidth={4} strokeLinecap="round" />
       {/* 起点 + HEAD */}

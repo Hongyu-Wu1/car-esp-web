@@ -3,3 +3,5 @@ dist
 dist-ssr
 *.local
 .DS_Store
+# 项目记忆文档（本地自用，不入库不发布）
+memory.md

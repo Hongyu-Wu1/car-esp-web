@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import Typewriter from './components/Typewriter'
 import Particles from './components/Particles'
 import GitGraph from './components/GitGraph'
 import carImg from './assets/car.png'
@@ -63,20 +62,18 @@ function CoverPage() {
           <i className="block h-[68%] w-[7px] border border-accent bg-accent" />
           <i className="block h-full w-[7px] border border-current" />
         </span>
-        <span>三轮车 · 摄像头智能小车</span>
+        <span>esp智能车</span>
       </div>
 
       <div className="relative z-10 max-w-5xl">
         <p className="eyebrow"><span />第 16 组 · 电子系统设计 · 交流答辩</p>
 
-        <h1 className="hero-title mt-6">
-          <Typewriter text="三轮车 —— 摄像头智能小车" />
-        </h1>
+        <h1 className="hero-title mt-6">esp智能车</h1>
 
         <p className="hero-note mt-5">视觉 + 离载架构 · 循迹 / 避障 / 停车 / 自动双球入洞</p>
 
         <div className="mt-8 flex justify-center">
-          <img src={carImg} alt="三轮车智能小车"
+          <img src={carImg} alt="esp智能车"
             className="w-52 md:w-72 rounded-2xl border border-white/10 shadow-[0_0_40px_rgba(98,241,209,0.22)]" />
         </div>
 
@@ -96,7 +93,7 @@ function CoverPage() {
 /* ---------- P2 目录 ---------- */
 const toc = [
   { n: '①', title: '项目管理', desc: 'Git & GitHub 分支 / 提交管理，远端备份', tag: 'GIT', color: 'text-accent border-accent/40' },
-  { n: '②', title: '架构', desc: 'ESP 采集执行 + 笔记本计算 & 实时显示，C / py 分层', tag: 'ARCH', color: 'text-[#9b6cff] border-[#9b6cff]/40' },
+  { n: '②', title: '架构', desc: 'ESP 采集执行 + 笔记本计算 & 实时显示\nC / py 分层', tag: 'ARCH', color: 'text-[#9b6cff] border-[#9b6cff]/40' },
   { n: '③', title: '算法', desc: '巡线 / 避障 / 推球 —— 自适应阈值 + 多反馈 + 动态 HSV', tag: 'VISION', color: 'text-[#ffd166] border-[#ffd166]/40' },
 ]
 
@@ -105,7 +102,6 @@ function TocPage() {
     <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24">
       <p className="eyebrow"><span />CONTENTS</p>
       <h2 className="content-title mt-4">目录 · 三个创新点</h2>
-      <p className="muted mt-3 text-xs tracking-[.2em]">按 ← → 翻页</p>
 
       <div className="mt-10 grid w-full max-w-5xl gap-4 md:grid-cols-3">
         {toc.map((t) => (
@@ -116,7 +112,7 @@ function TocPage() {
               <span className="rounded-full border px-2.5 py-0.5 text-[.6rem] tracking-[.2em]">{t.tag}</span>
             </div>
             <div className="mt-4 text-xl font-light text-white">{t.title}</div>
-            <div className="mt-2 text-sm text-white/60 leading-relaxed">{t.desc}</div>
+            <div className="mt-2 whitespace-pre-line text-sm text-white/60 leading-relaxed">{t.desc}</div>
           </div>
         ))}
       </div>
@@ -125,18 +121,6 @@ function TocPage() {
 }
 
 /* ---------- P3 创新① 项目管理 ---------- */
-const branches = ['feat-follow-line-and-kick-ball ★当前', 'feat-camera-line-follow', 'feat/line-follow', 'feat/no-wifi-speed-feedback', 'docs/pin-table', 'simple-version', 'tested/car-esp-newest', 'weekone', 'main']
-
-const commits = [
-  '38f93a7 拆分靠近/击球油门',
-  'd5cd024 修复: 桥接遥测修油门狂飙',
-  '9e56bbb 重构: 感知/网络/任务协调三层',
-  '5fc69d4 修复: 卡住提k上限',
-  '573d4a9 功能: 推球接 anti_stall',
-  '4e090f2 功能: 吸收推球入洞(HSV 调色)',
-  '53eaccb 文档: main 并入 feat 最新',
-]
-
 function ProjPage() {
   return (
     <div className="relative min-h-screen px-6 pt-20 pb-24 md:px-10">
@@ -144,48 +128,30 @@ function ProjPage() {
         <PageHeader eyebrow="创新① · 项目管理" title="Git & GitHub 协作" />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <Card title="为什么用 Git & GitHub">
-              <ul className="space-y-3">
-                <Bullet>多人无法同时编辑同一份代码。</Bullet>
-                <Bullet>去年 AI 一条 <code className="text-accent">rm</code> 把整个项目删了，本地没备份 → 没有远端保存就全没了（教训）。</Bullet>
-              </ul>
-            </Card>
-            <Card title="做法">
-              <ul className="space-y-3">
-                <Bullet>用 <b className="text-white/90">分支 + 提交 + 推送</b> 到 GitHub 远端备份。</Bullet>
-                <Bullet>每个功能开一个 feature 分支，验证通过后 merge 回 main。</Bullet>
-                <Bullet>文档随代码一起提交；提交信息规范（功能 / 修复 / 重构…）。</Bullet>
-              </ul>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card title="分支历史 · 仙人掌">
-              <GitGraph />
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full border border-accent/40 px-2.5 py-0.5 text-[.62rem] text-accent">已完成并回 main</span>
-                <span className="rounded-full border border-[#fb7185]/40 px-2.5 py-0.5 text-[.62rem] text-[#fb7185]">断头 · 被放弃</span>
-                <span className="rounded-full border border-[#ffd166]/40 px-2.5 py-0.5 text-[.62rem] text-[#ffd166]">当前分支</span>
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <Card title="分支（9 条）">
-            <div className="flex flex-wrap gap-2">
-              {branches.map((b) => (
-                <span key={b} className={`rounded-full border px-2.5 py-1 text-[.68rem] ${b.includes('★') ? 'border-[#ffd166]/50 text-[#ffd166]' : 'border-white/10 text-white/70'}`}>{b}</span>
-              ))}
-            </div>
+          <Card title="为什么用 Git & GitHub">
+            <ul className="space-y-3">
+              <Bullet>多人无法同时编辑同一份代码。</Bullet>
+              <Bullet>去年 AI 一条 <code className="text-accent">rm</code> 把整个项目删了，本地没备份 → 没有远端保存就全没了。</Bullet>
+            </ul>
           </Card>
-          <Card title="近期提交">
-            <ul className="space-y-1.5 font-mono text-[.72rem] text-white/70">
-              {commits.map((c) => <li key={c}>{c}</li>)}
+
+          <Card title="做法">
+            <ul className="space-y-3">
+              <Bullet>用 <b className="text-white/90">分支 + 提交 + 推送</b> 到 GitHub 远端备份。</Bullet>
+              <Bullet>每个功能开一个 feature 分支，验证通过后 merge 回 main。</Bullet>
+              <Bullet>文档随代码一起提交；提交信息规范（功能 / 修复 / 重构…）。</Bullet>
             </ul>
           </Card>
         </div>
+
+        <Card title="分支历史" className="mt-6">
+          <GitGraph />
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="rounded-full border border-[#34d399]/40 px-2.5 py-0.5 text-[.62rem] text-[#34d399]">并入 main（已合并）</span>
+            <span className="rounded-full border border-[#ffd166]/40 px-2.5 py-0.5 text-[.62rem] text-[#ffd166]">创新任务</span>
+            <span className="rounded-full border border-[#fb7185]/40 px-2.5 py-0.5 text-[.62rem] text-[#fb7185]">断头 · 被放弃</span>
+          </div>
+        </Card>
       </div>
     </div>
   )
@@ -353,7 +319,7 @@ function SummaryPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24 text-center">
       <p className="eyebrow"><span />SUMMARY · Q&amp;A</p>
-      <h2 className="content-title mt-4">收获 · 一句话总结</h2>
+      <h2 className="content-title mt-4">收获</h2>
 
       <div className="mt-8 w-full max-w-3xl">
         <Card title="主要收获">
