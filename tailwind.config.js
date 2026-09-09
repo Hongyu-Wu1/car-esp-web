@@ -11,7 +11,7 @@ export default {
           600: '#2c4a77',
           500: '#3a5a8c',
         },
-        accent: '#e06c2b',
+        accent: '#62f1d1',
         ink: '#20242b',
         fog: '#f2f5fa',
       },

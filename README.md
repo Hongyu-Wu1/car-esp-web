@@ -19,18 +19,23 @@
 ## 2. 技术栈
 
 - **Vite + React 18 + Tailwind CSS 3**。
-- **reactbits 组件**（[reactbits.dev](https://reactbits.dev/get-started/index)）：`GradientText`（渐变流光标题）、`ShinyText`（金属反光副标题）。
-- 视频作为**独立文件**（`import demo_line.mp4` → Vite 构建出 `dist/assets/*.mp4` + 相对引用），不再走单文件内联。
+- **设计基准借用 [typermonkie.github.io](/#top) 的配色排版**：近黑底 `#050607` + 青绿点缀 `#62f1d1`，细体大字、网格 + 径向辉光 + 粒子背景（见 `src/index.css` 的 CSS 变量与自定义类）。
+- 自写**轻量组件**（无第三方动画依赖）：`Typewriter`（打字机标题）、`Particles`（2D 粒子场）、`GitGraph`（P3 的 git 分支"仙人掌" SVG）。原 reactbits 的 `GradientText`/`ShinyText` 已不再引用。
+- 视频作为**独立文件**（`import demo_line.mp4` → 构建出 `dist/assets/*.mp4`），不再走单文件内联。
 
 ---
 
 ## 3. 当前功能（已能打开，已验证渲染）
 
-- **翻页**（像 PPT）：键盘 `←`/`→` 翻页、**空格**下一页、`Home`/`End` 跳首末；底部"上一页/下一页 + 圆点指示 + 页码"；地址栏 **`#p1`/`#p2`** 直达某页、支持浏览器前进后退；翻页有**淡入+右移过渡**（`src/index.css` 的 `.page-enter`）。
-- **已有两页**：
-  - **P1 封面**：组别 → 渐变标题 → 流光副标题 → 小车图 → 组员 → "下一页·目录 →"。
-  - **P2 目录**：`CONTENTS / 目录 · 三个创新点`（渐变标题）+ **三张卡片**（① 项目管理 / ② 架构 / ③ 算法，各配色渐变，点击 `go(i+2)` 预留跳目标内容页）+ "返回封面"。
-- **reactbits 动画**：渐变标题、金属流光；`page-enter` 过渡。
+- **翻页**（像 PPT）：键盘 `←`/`→` 翻页、**空格**下一页、`Home`/`End` 跳首末；底部"上一页/下一页 + 圆点指示 + 页码"；地址栏 **`#p1`**~**`#p8`** 直达某页、支持浏览器前进后退；翻页有**淡入+右移过渡**（`src/index.css` 的 `.page-enter`）。
+- **共 8 页（已全部填好，配色排版统一为 typermonkie 风）**：
+  - **P1 封面**：品牌 mark → 呼吸 eyebrow → 打字机大标题 → 副说明 → 小车图 → 组员 → "下一页·目录"。
+  - **P2 目录**：`CONTENTS` + 三张创新点卡片 + 返回封面。
+  - **P3 创新① 项目管理**：为何用 Git/做法 + **git 分支"仙人掌"图**（中间 `main` 主线、上下分支，合并成环=已回 main、断头=被放弃）+ 分支 9 条 + 近期提交。
+  - **P4 创新② 架构**：数据流（ESP→WiFi→笔记本）+ 主要问题 + 文件关系树。
+  - **P5–P7 创新③ 算法**：巡线 / 避障 / 推球，各配说明卡 + **循环视频**（`demo_line/avoid/strike.mp4`）。
+  - **P8 总结**：收获 5 条 + 一句话 + 谢谢/组员。
+- **动画**：`page-enter` 过渡 + 封面打字机 + 粒子背景；内容页视频走原生 `loop muted autoplay`。
 
 ---
 
@@ -40,15 +45,15 @@
 |---|---|
 | `package.json` / `package-lock.json` | npm 工程（dev/build/preview；依赖 react/react-dom；devDeps vite/@vitejs/plugin-react/tailwindcss/postcss/autoprefixer） |
 | `vite.config.js` | Vite：`react` 插件 + **`base:'/car-esp-web/'`**（GitHub Pages 子路径） |
-| `tailwind.config.js` | Tailwind 主题：配色(brand/accent/ink/fog)、字体、`keyframes`(shine/gradient)+`animations` |
+| `tailwind.config.js` | Tailwind 主题：`accent`(青绿 `#62f1d1`) 等配色，字体扩展 |
 | `postcss.config.js` | PostCSS：tailwind + autoprefixer |
 | `.github/workflows/deploy.yml` | GitHub Actions：push 到 main → `npm ci && npm run build` → 发布 Pages |
 | `.gitignore` | 忽略 `node_modules/`、`dist/` 等 |
 | `index.html` | 页面壳（`#root` + 引 `src/main.jsx`） |
 | `src/main.jsx` | React 入口 |
-| `src/index.css` | Tailwind 指令 + `.page-enter` 翻页动画 |
-| `src/App.jsx` | **核心**：封面页、目录页、**翻页逻辑**（键盘/按钮/hash/过渡），调 reactbits 组件 |
-| `src/components/GradientText.jsx`、`ShinyText.jsx` | **reactbits 组件**（从官方仓库拷的源码，零依赖） |
+| `src/index.css` | Tailwind 指令 + typermonkie 主题（CSS 变量/网格/辉光/细体大字/eyebrow/光标）+ `.page-enter` 翻页动画 |
+| `src/App.jsx` | **核心**：8 页内容（封面/目录/创新①②③/总结）+ **翻页逻辑**（键盘/按钮/hash/过渡）/ 三段视频 |
+| `src/components/Typewriter.jsx`、`Particles.jsx`、`GitGraph.jsx` | 自写轻量组件：打字机标题 / 2D 粒子场 / git 分支"仙人掌"图 |
 | `src/assets/` | 车图 `car.png` + 三段 `demo_*.mp4` + `poster_demo_*.png`（内容页视频/封面） |
 | `汇报内容_可复制.md` | 答辩内容文案（每页要点），写 P3–P8 的依据 |
 
@@ -66,11 +71,11 @@ npm run preview      # 本地预览构建产物
 ```
 
 - 本地看效果建议用 `npm run dev`（或 `npm run preview`），因为 `base:'/car-esp-web/'` 是给 GitHub Pages 子路径用的。
-- 已用 **Vite 构建验证**两页正常渲染（有视频的资料已复制进 `src/assets/`，写内容页时 `import` 即可）。
+- 已用 **Vite 构建 + headless 截图**验证 8 页全部正常渲染（含 P3 仙人掌 git 图与 P5–P7 循环视频）。
 
 ---
 
-## 6. 内容规划（待填，按"讲对应内容放对应视频"）
+## 6. 内容规划（已填好，共 8 页；"讲对应内容放对应视频"）
 
 | 页 | 内容 | 视频（循环直到换页） |
 |---|---|---|
