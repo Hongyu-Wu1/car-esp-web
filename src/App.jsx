@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import Particles from './components/Particles'
 import GitGraph from './components/GitGraph'
 import FileTree from './components/FileTree'
@@ -222,42 +222,226 @@ function ArchPage() {
   )
 }
 
-/* ---------- P5 创新③ 算法 · 巡线 ---------- */
-function LinePage() {
+/* ---------- P5 滚轴 + Python 着色（纯 JS，可单独跑测试） ---------- */
+/* 滚轴几何：每栏高度**按内容自适应**（栏底不留白）；窗口高 = 当前两栏 + 缝隙 + 露出下一栏的一截
+   露出量按"下一栏的一多半"取：栏高变矮后 120px 会把下一栏整栏都露出来，就不像"滚在下面"了 */
+const LINE_GAP = 10
+const LINE_PEEK = 80
+const LINE_FALLBACK_H = 200 // 首帧兜底，量到真实高度前用
+
+/* 由四栏实测高度算出：每栏的轨道 y 偏移 off[]、每档的窗口高 view[] */
+function lineGeom(heights) {
+  const off = []
+  let acc = 0
+  for (const h of heights) { off.push(acc); acc += h + LINE_GAP }
+  const view = heights.map((h, s) => {
+    const pair = s + 1 < heights.length ? h + LINE_GAP + heights[s + 1] : h
+    /* 判据是"当前两栏下面还有没有栏"，而不是档位是不是最后一档：
+       末尾那栏空栏占位就是靠这个才会在最后一档露出来 */
+    const hasNext = s + 2 < heights.length
+    return pair + (hasNext ? LINE_GAP + LINE_PEEK : 0)
+  })
+  return { off, view }
+}
+/* 档位：0 = ①②栏 + 视频1 · 1 = ②③栏 + 视频2 · 2 = ③④栏 + 代码 */
+const LINE_STEPS = 3
+
+/* 极简 Python 着色：逐位置试规则，命中就包 span，都不中按普通文字整段吃掉 */
+const PY_RULES = [
+  [/"""[\s\S]*?"""/y, 'text-[#8fd6a0]'], // 文档字符串
+  [/#[^\n]*/y, 'text-white/35 italic'], // 注释
+  [/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/y, 'text-[#8fd6a0]'], // 字符串
+  [/\b(?:def|global|if|elif|else|for|in|is|not|and|or|return|while|import|from|class|lambda|pass|break|continue)\b/y, 'text-[#c792ea]'], // 关键字
+  [/\b(?:None|True|False)\b/y, 'text-[#ff9e64]'], // 常量
+  [/\b(?:abs|any|int|min|max|len|float|range|sum|round|print|bytes|bool)\b/y, 'text-[#82aaff]'], // 内建
+  [/\b\d+(?:\.\d+)?\b/y, 'text-[#ffcb6b]'], // 数字
+  [/[A-Za-z_]\w*(?=\()/y, 'text-[#62f1d1]'], // 函数名
+]
+const PY_PLAIN = /^(?:[A-Za-z_]\w*|[^A-Za-z_0-9"'#]+|[\s\S])/
+
+function tokenizePython(code) {
+  const out = []
+  let i = 0
+  while (i < code.length) {
+    let tok = null
+    for (const [re, cls] of PY_RULES) {
+      re.lastIndex = i
+      const m = re.exec(code)
+      if (m && m.index === i) { tok = { t: m[0], cls }; break }
+    }
+    if (!tok) { const m = PY_PLAIN.exec(code.slice(i)); tok = { t: m[0], cls: 'text-white/85' } }
+    out.push(tok)
+    i += tok.t.length
+  }
+  return out
+}
+
+const ANTI_STALL_CODE = `def anti_stall(now_ms):
+    """卡住自动加力度。返回 boost (0..STALL_K_MAX)，加到基准 throttle 上。
+    判据：三轮 |RPM| 都 < STALL_ENC_RPM 且每过 STALL_MS 一个间隔 => +STALL_K_STEP，封顶 STALL_K_MAX。
+    任一轮 |RPM|≥阈值=在动 => 回落 0。"""
+    global _last_move_ms
+    e = (abs(_cfg.enc_e1), abs(_cfg.enc_e4), abs(_cfg.enc_e2))
+    if any(v >= _cfg.STALL_ENC_RPM for v in e):
+        _last_move_ms = now_ms
+        return 0.0
+    if _last_move_ms is None:
+        _last_move_ms = now_ms
+        return 0.0
+    steps = int((now_ms - _last_move_ms) // _cfg.STALL_MS)
+    return min(_cfg.STALL_K_MAX, _cfg.STALL_K_STEP * steps)`
+
+/* ---------- P5 四栏内容（滚轴 = 这四栏） ---------- */
+const LINE_CARDS = [
+  {
+    title: '黑线判定',
+    bullets: [
+      '绿色线内做为 ROI，绿色线外画面不进入算法。',
+      <>洋红色框选区域做为「种子域」，<br />与其连通的最大黑色区域识别为黑线。</>,
+      '车轮、地砖缝隙、周围杂物、远处折回的黑线不干扰巡线。',
+    ],
+  },
+  {
+    title: 'Otsu 自适应二值化',
+    bullets: [
+      <>先算「种子域」对比度 <code className="text-accent">std</code>，过低认为没有黑线，进入丢线状态。</>,
+      <>对比度达标则自动在黑白双灰度峰之间找到阈值 <code className="text-accent">Otsu thr</code>。</>,
+      '算法不受光照变化和板子逐渐被踩黑影响。',
+    ],
+  },
+  {
+    title: '判断方向',
+    bullets: [
+      '车偏：用车前区域黑线重心，连续 P 控制，偏移大修正力度大。',
+      '记忆：用 ROI 内黑线重心做为丢线后找线依据。',
+    ],
+  },
+  {
+    title: '自动油门',
+    bullets: [
+      '电机速度快，受帧率限制可能出线，速度慢可能在卡住',
+      '引入油门控制量，电机转速持续为0时梯度提升油门',
+    ],
+  },
+  /* 第 5 栏是**空栏占位**：最后一档（③④+代码）下面也得有一截"滚在下面"的东西，
+     否则左边到那里就断了、和右边视频/代码不配平（用户要求"最后加个空栏"）。
+     只需要 ≥ LINE_PEEK 这么高，露出来的部分被窗口下沿切掉。 */
+  { title: '', bullets: [], placeholder: true },
+]
+
+/* ---------- P5 滚轴：每栏自适应高度，整条轨道按实测偏移上下平移 + 每栏按位置绕 X 轴倾斜 ---------- */
+function LineRoller({ step }) {
+  const itemRefs = useRef([])
+  const [heights, setHeights] = useState(() => LINE_CARDS.map(() => LINE_FALLBACK_H))
+
+  /* 量每栏真实高度（栏高由内容决定，不能写死），窗口尺寸和滚动位移都跟着它走 */
+  useLayoutEffect(() => {
+    const measure = () => {
+      const hs = itemRefs.current.map((el, i) => (el ? el.offsetHeight : LINE_FALLBACK_H))
+      setHeights((prev) => (prev.length === hs.length && prev.every((v, i) => v === hs[i]) ? prev : hs))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    itemRefs.current.forEach((el) => el && ro.observe(el))
+    window.addEventListener('resize', measure)
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
+  }, [])
+
+  const { off, view } = lineGeom(heights)
+  const frameH = Math.max(...view) // 外框固定：行高不随档位变 → 右边的视频/代码一动不动
+  const fade = 'linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 26px), transparent 100%)'
+  return (
+    <div style={{ height: frameH }}>
+      <div
+        className="relative overflow-hidden"
+        style={{
+          height: view[step], // 窗口只跟着自己的内容收放（贴顶），不再影响右边
+          perspective: '1500px',
+          maskImage: fade,
+          WebkitMaskImage: fade,
+          transition: 'height 720ms cubic-bezier(.22,.9,.24,1)',
+        }}
+      >
+        <div
+          className="flex flex-col"
+          style={{
+            gap: LINE_GAP,
+            transform: `translateY(${-off[step]}px)`,
+            transformStyle: 'preserve-3d',
+            transition: 'transform 720ms cubic-bezier(.22,.9,.24,1)',
+          }}
+        >
+        {LINE_CARDS.map((c, i) => {
+          const rel = i - step
+          const off2 = rel < 0 || rel > 1 // 不在"正面两栏"里的，退到后面
+          const angle = rel === 0 ? 6 : rel === 1 ? -6 : rel < 0 ? 24 : -24
+          /* 紧跟着下面那一栏（露出半个身子、看得到标题）别压太暗，否则不像"真有一栏在下面" */
+          const opacity = !off2 ? 1 : rel === 2 ? 0.72 : 0.4
+          return (
+            <div
+              key={c.title}
+              ref={(el) => { itemRefs.current[i] = el }}
+              className="shrink-0"
+              style={{
+                transformOrigin: 'center center',
+                transform: `translateZ(${off2 ? -70 : -8}px) rotateX(${angle}deg)`,
+                opacity,
+                transition: 'transform 720ms cubic-bezier(.22,.9,.24,1), opacity 720ms ease',
+              }}
+            >
+              <Card title={c.title} className={c.placeholder ? 'min-h-[104px]' : ''}>
+                {c.bullets.length > 0 && (
+                  <ul className="space-y-2">
+                    {c.bullets.map((b, k) => <Bullet key={k}>{b}</Bullet>)}
+                  </ul>
+                )}
+              </Card>
+            </div>
+          )
+        })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* 旁边这一块：视频1 → 视频2 → 代码，三者**共用同一个 16:9 框 + 同一条说明**，
+   换档时框的大小和位置完全不动（用户要求"右边视频和代码的大小位置固定不要动"） */
+function LineStage({ step }) {
+  const src = step === 1 ? lineRealVideo : lineVideo
+  const poster = step === 1 ? posterLineReal : posterLine
+  const caption =
+    step === 2 ? '自动油门 · anti_stall 防卡死实现'
+      : step === 1 ? '真机实录 · 第三人称全程（循环播放）'
+        : '巡线 · 第一视角带标注画面（循环播放）'
+  return (
+    <figure className="relative z-20 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl">
+      <div className="aspect-video w-full">
+        {step === 2 ? (
+          <pre className="flex h-full w-full items-center overflow-hidden px-4 font-mono text-[10px] leading-[1.6] whitespace-pre-wrap xl:text-[11px] xl:leading-[1.62]">
+            <code>{tokenizePython(ANTI_STALL_CODE).map((t, i) => <span key={i} className={t.cls}>{t.t}</span>)}</code>
+          </pre>
+        ) : (
+          /* key=src：换视频时重挂，保证从头自动播放 */
+          <video key={src} className="h-full w-full object-cover" src={src} poster={poster}
+            loop muted autoPlay playsInline controls />
+        )}
+      </div>
+      <figcaption className="px-4 py-2 text-center text-xs text-white/50">{caption}</figcaption>
+    </figure>
+  )
+}
+
+/* ---------- P5 创新③ 算法 · 巡线（三段式：滚轴转一栏 + 旁边换一次） ---------- */
+function LinePage({ step = 0 }) {
   return (
     <div className="relative min-h-screen px-6 pt-12 pb-16 md:px-10">
       <div className="mx-auto max-w-6xl">
         <PageHeader eyebrow="创新③ · 算法" title="巡线 · 种子连通域 + Otsu 自适应阈值" />
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className="space-y-4">
-            <Card title="黑线判定">
-              <ul className="space-y-2">
-                <Bullet>绿色线内做为 ROI，绿色线外画面不进入算法。</Bullet>
-                <Bullet>洋红色框选区域做为「种子域」，与其连通的最大黑色区域识别为黑线。</Bullet>
-                <Bullet>车轮、地砖缝隙、周围杂物、远处折回的黑线不干扰巡线。</Bullet>
-              </ul>
-            </Card>
-            <Card title="Otsu 自适应二值化">
-              <ul className="space-y-2">
-                <Bullet>先算「种子域」对比度 <code className="text-accent">std</code>，过低认为没有黑线，进入丢线状态。</Bullet>
-                <Bullet>对比度达标则自动在黑白双灰度峰之间找到阈值 <code className="text-accent">Otsu thr</code>。</Bullet>
-                <Bullet>算法不受光照变化和板子逐渐被踩黑影响。</Bullet>
-              </ul>
-            </Card>
-            <Card title="判断方向">
-              <ul className="space-y-2">
-                <Bullet>车偏：用车前区域黑线重心，连续 P 控制，偏移大修正力度大。</Bullet>
-                <Bullet>记忆：用 ROI 内黑线重心做为丢线后找线依据。</Bullet>
-              </ul>
-            </Card>
-          </div>
-          <div className="space-y-4">
-            <VideoPanel src={lineVideo} poster={posterLine} caption="巡线 · 第一视角带标注画面（循环播放）" />
-            {/* 真机实录：源视频 1~21s 切出，放在上面的视频下方循环播放（尺寸收小以守住「一页一屏」） */}
-            <div className="mx-auto w-full max-w-[440px]">
-              <VideoPanel src={lineRealVideo} poster={posterLineReal} caption="真机实录 · 第三人称全程（循环播放）" />
-            </div>
-          </div>
+        {/* items-center：右栏与滚轴视觉居中（行高由滚轴固定外框决定，换档不变 → 位置仍然不动） */}
+        <div className="grid items-center gap-5 lg:grid-cols-2">
+          <LineRoller step={step} />
+          <LineStage step={step} />
         </div>
       </div>
     </div>
@@ -324,6 +508,8 @@ function PushPage() {
 
 const pages = [CoverPage, TocPage, ProjPage, ArchPage, LinePage, AvoidPage, PushPage]
 
+const LINE_PAGE = 4 // P5 在 pages 里的下标（滚轴页）
+
 /* ---------- 主 App：翻页 ---------- */
 export default function App() {
   const hashPage = useCallback(() => {
@@ -332,21 +518,43 @@ export default function App() {
   }, [])
 
   const [page, setPage] = useState(hashPage)
+  const [lineStep, setLineStep] = useState(0) // P5 滚轴档位 0/1/2
+  const pageRef = useRef(page)
+  useEffect(() => { pageRef.current = page }, [page])
+
   const go = useCallback((n) => setPage(Math.min(pages.length - 1, Math.max(0, n))), [])
+
+  /* 前进：P5 先把滚轴转到底，才翻到下一页 */
+  const advance = useCallback(() => {
+    if (page === LINE_PAGE && lineStep < LINE_STEPS - 1) { setLineStep(lineStep + 1); return }
+    if (page === LINE_PAGE - 1) setLineStep(0) // 正向进 P5 → 从第一档开始
+    setPage(Math.min(pages.length - 1, page + 1))
+  }, [page, lineStep])
+
+  /* 后退：与前进严格对称——先逐档倒着滚，再退页；从 P6 退回来停在最后一档 */
+  const retreat = useCallback(() => {
+    if (page === LINE_PAGE && lineStep > 0) { setLineStep(lineStep - 1); return }
+    if (page === LINE_PAGE + 1) setLineStep(LINE_STEPS - 1)
+    setPage(Math.max(0, page - 1))
+  }, [page, lineStep])
 
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setPage(p => Math.min(pages.length - 1, p + 1)) }
-      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setPage(p => Math.max(0, p - 1)) }
-      else if (e.key === 'Home') setPage(0)
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advance() }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); retreat() }
+      else if (e.key === 'Home') { setLineStep(0); setPage(0) }
       else if (e.key === 'End') setPage(pages.length - 1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [advance, retreat])
 
   useEffect(() => {
-    const onHash = () => setPage(hashPage())
+    /* 只有"手输地址栏 #pN"才重置档位；自己写 hash 触发的事件用 pageRef 忽略掉 */
+    const onHash = () => {
+      const target = hashPage()
+      if (target !== pageRef.current) { setLineStep(0); setPage(target) }
+    }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [hashPage])
@@ -360,13 +568,13 @@ export default function App() {
   return (
     <div className="deck-shell text-white">
       <div key={page} className="page-enter min-h-screen">
-        <Active go={go} />
+        <Active go={go} step={page === LINE_PAGE ? lineStep : 0} />
       </div>
 
       {/* 左右半边点击翻页（无提示；视频面板 z-20 在点击层之上，控件仍可点） */}
-      <button onClick={() => go(page - 1)} aria-label="上一页"
+      <button onClick={retreat} aria-label="上一页"
         className="fixed left-0 top-0 z-10 h-full w-1/2 cursor-pointer" tabIndex={-1} />
-      <button onClick={() => go(page + 1)} aria-label="下一页"
+      <button onClick={advance} aria-label="下一页"
         className="fixed right-0 top-0 z-10 h-full w-1/2 cursor-pointer" tabIndex={-1} />
 
       {/* 左下角：按键翻页提示 */}
