@@ -120,6 +120,11 @@
   50% { transform: translateX(250%); }
 }
 
+/* P3 git 分支图：切到该页时按时间顺序"长出来"（main 逐渐延伸），20s 后定住
+   gitSweep：揭示窗口随 main 前进（分支线与 main 同步延伸，不会超前） */
+@keyframes gitSweep { from { transform: translateX(var(--sweep, 0px)); } to { transform: translateX(0px); } }
+@keyframes gitFade { from { opacity: 0; } to { opacity: 1; } }
+
 /* 通用卡片/细分隔线 */
 .hairline-t { border-top: 1px solid var(--hairline); }
 .muted { color: var(--muted); }

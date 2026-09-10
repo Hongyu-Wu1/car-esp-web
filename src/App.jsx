@@ -94,14 +94,14 @@ function CoverPage() {
 const toc = [
   { n: '①', title: '项目管理', desc: 'Git & GitHub 分支 / 提交管理，远端备份', tag: 'GIT', color: 'text-accent border-accent/40' },
   { n: '②', title: '架构', desc: 'ESP 采集执行 + 笔记本计算 & 实时显示\nC / py 分层', tag: 'ARCH', color: 'text-[#9b6cff] border-[#9b6cff]/40' },
-  { n: '③', title: '算法', desc: '巡线 / 避障 / 推球 —— 自适应阈值 + 多反馈 + 动态 HSV', tag: 'VISION', color: 'text-[#ffd166] border-[#ffd166]/40' },
+  { n: '③', title: '算法', desc: '巡线 / 避障 / 推球\n自适应阈值 + 多反馈 + 动态 HSV', tag: 'VISION', color: 'text-[#ffd166] border-[#ffd166]/40' },
 ]
 
 function TocPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24">
       <p className="eyebrow"><span />CONTENTS</p>
-      <h2 className="content-title mt-4">目录 · 三个创新点</h2>
+      <h2 className="content-title mt-4">目录</h2>
 
       <div className="mt-10 grid w-full max-w-5xl gap-4 md:grid-cols-3">
         {toc.map((t) => (
@@ -147,9 +147,10 @@ function ProjPage() {
         <Card title="分支历史" className="mt-6">
           <GitGraph />
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-[#34d399]/40 px-2.5 py-0.5 text-[.62rem] text-[#34d399]">并入 main（已合并）</span>
+            <span className="rounded-full border border-[#34d399]/40 px-2.5 py-0.5 text-[.62rem] text-[#34d399]">并入 main</span>
+            <span className="rounded-full border border-dashed border-[#34d399]/60 px-2.5 py-0.5 text-[.62rem] text-[#34d399]">部分吸收</span>
             <span className="rounded-full border border-[#ffd166]/40 px-2.5 py-0.5 text-[.62rem] text-[#ffd166]">创新任务</span>
-            <span className="rounded-full border border-[#fb7185]/40 px-2.5 py-0.5 text-[.62rem] text-[#fb7185]">断头 · 被放弃</span>
+            <span className="rounded-full border border-[#fb7185]/40 px-2.5 py-0.5 text-[.62rem] text-[#fb7185]">被放弃</span>
           </div>
         </Card>
       </div>
