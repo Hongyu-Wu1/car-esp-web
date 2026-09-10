@@ -23,7 +23,7 @@ function PageHeader({ eyebrow, title }) {
 function Bullet({ children, center = false }) {
   if (center) {
     return (
-      <li className="text-center text-white/80 text-sm md:text-[15px] leading-relaxed">
+      <li className="text-center text-white/80 text-[15px] md:text-[16.5px] leading-relaxed">
         <span className="mr-1.5 text-accent">●</span>{children}
       </li>
     )
@@ -31,7 +31,7 @@ function Bullet({ children, center = false }) {
   return (
     <li className="flex gap-3">
       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_#62f1d1]" />
-      <span className="text-white/80 text-sm md:text-[15px] leading-relaxed">{children}</span>
+      <span className="text-white/80 text-[15px] md:text-[16.5px] leading-relaxed">{children}</span>
     </li>
   )
 }
@@ -39,7 +39,7 @@ function Bullet({ children, center = false }) {
 function Card({ title, children, className = '' }) {
   return (
     <div className={`rounded-2xl border border-white/10 bg-white/[0.04] p-5 md:p-6 backdrop-blur ${className}`}>
-      {title && <h3 className="mb-4 text-sm font-semibold tracking-[0.18em] text-accent">{title}</h3>}
+      {title && <h3 className="mb-3 text-base md:text-[17px] font-semibold tracking-[0.12em] text-accent">{title}</h3>}
       {children}
     </div>
   )
@@ -47,7 +47,7 @@ function Card({ title, children, className = '' }) {
 
 function VideoPanel({ src, poster, caption }) {
   return (
-    <figure className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl">
+    <figure className="relative z-20 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl">
       <video className="aspect-video w-full object-cover" src={src} poster={poster} loop muted autoPlay playsInline controls />
       {caption && <figcaption className="px-4 py-2 text-center text-xs text-white/50">{caption}</figcaption>}
     </figure>
@@ -195,12 +195,13 @@ function ArchPage() {
           ))}
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[330px_minmax(0,1fr)]">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[372px_minmax(0,1fr)]">
           <div className="space-y-4">
             <Card title="固件与算法分离">
               <ul className="space-y-2">
                 <Bullet>MJPEG esp 解压：帧率 <b className="text-white/90">15fps</b>。</Bullet>
                 <Bullet>优化传输，电脑解压：帧率 <b className="text-white/90">25fps</b>，<br />达相机拍摄速度。</Bullet>
+                <Bullet>避免反复烧录。</Bullet>
               </ul>
             </Card>
             <Card title="录制：仿真 & 复盘">
@@ -263,17 +264,17 @@ function AvoidPage() {
         <PageHeader eyebrow="创新③ · 算法" title="避障 · 左移绕板 + 双反馈" />
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
-            <Card title="流程">
-              <Bullet>左移绕板 → 直行定距 → 右移找线回线；板 = 障碍，绕行而非停。</Bullet>
-            </Card>
-            <Card title="双反馈调节（左移时闭环）">
+            <Card title="关键问题">
               <ul className="space-y-3">
-                <Bullet>① 让『板/地分界线』保持水平（倾角当误差）。</Bullet>
-                <Bullet>② 超声距离反馈：维持与板 ~10cm（太近后退 / 太远前进）。</Bullet>
+                <Bullet>WiFi 延迟随机，到板距离不容易硬编码。</Bullet>
+                <Bullet>保证『退出左移时距离固定』，『直行定距』才能硬编码时长。</Bullet>
               </ul>
             </Card>
-            <Card title="关键问题">
-              <Bullet>每次 WiFi 延迟不定，到板距离不好测 → 保证『退出左移时距离固定』 → 后面『直行定距』才能硬编码时长。</Bullet>
+            <Card title="左移双反馈调节">
+              <ul className="space-y-3">
+                <Bullet>① 让『板/地分界线』保持水平。</Bullet>
+                <Bullet>② 超声距离反馈：提前 <b className="text-white/90">5cm</b> 进入，<br />左移时调整到与板 ~<b className="text-white/90">10cm</b>。</Bullet>
+              </ul>
             </Card>
           </div>
           <VideoPanel src={avoidVideo} poster={posterAvoid} caption="左移避障 · 第一视角带标注画面（循环播放）" />
@@ -392,8 +393,14 @@ export default function App() {
         <Active go={go} />
       </div>
 
+      {/* 左右半边点击翻页（无提示；视频面板 z-20 在点击层之上，控件仍可点） */}
+      <button onClick={() => go(page - 1)} aria-label="上一页"
+        className="fixed left-0 top-0 z-10 h-full w-1/2 cursor-pointer" tabIndex={-1} />
+      <button onClick={() => go(page + 1)} aria-label="下一页"
+        className="fixed right-0 top-0 z-10 h-full w-1/2 cursor-pointer" tabIndex={-1} />
+
       {/* 左下角：按键翻页提示 */}
-      <div className="fixed bottom-4 left-4 z-20 text-xs text-white/35">← → 翻页 · 空格下一页 · Home/End 首末</div>
+      <div className="fixed bottom-4 left-4 z-30 text-xs text-white/35">← → 翻页 · 空格下一页 · Home/End 首末</div>
     </div>
   )
 }
