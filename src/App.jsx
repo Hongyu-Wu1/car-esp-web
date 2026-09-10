@@ -14,8 +14,8 @@ import posterStrike from './assets/poster_demo_strike.png'
 
 /* ---------- 交接给下一位同学：只改这里 ---------- */
 const NEXT_SLIDE = {
-  url: 'https://typermonkie.github.io/#top', // ← 换成同学的站点地址
-  label: 'typermonkie.github.io',            // 鼠标悬停提示里显示
+  url: 'https://typermonkie.github.io/', // ← 同学指定的地址（不带 #top：他不希望被加片段）
+  label: 'typermonkie.github.io',        // 鼠标悬停提示里显示
 }
 
 /* 点圆环时才调用：预热对方站点。两条路一起走：
@@ -238,7 +238,7 @@ function ArchPage() {
           <div className="space-y-4">
             <Card title="固件与算法分离">
               <ul className="space-y-2">
-                <Bullet>MJPEG esp 解压：帧率 <b className="text-white/90">15fps</b>。</Bullet>
+                <Bullet>MJPEG esp 解压：帧率 <b className="text-white/90">7.8fps</b>。</Bullet>
                 <Bullet>优化传输，电脑解压：帧率 <b className="text-white/90">25fps</b>，<br />达相机拍摄速度。</Bullet>
                 <Bullet>避免反复烧录。</Bullet>
               </ul>
@@ -488,10 +488,13 @@ function LinePage({ step = 0 }) {
 /* ---------- P6 创新③ 算法 · 避障 ---------- */
 function AvoidPage() {
   return (
-    <div className="relative min-h-screen px-6 pt-20 pb-24 md:px-10">
+    /* pt-12/pb-16 与 P5 一致：不然整页比视口高 3px → 出现滚动条 → 内容被挤左 7px */
+    <div className="relative min-h-screen px-6 pt-12 pb-16 md:px-10">
       <div className="mx-auto max-w-6xl">
         <PageHeader eyebrow="创新③ · 算法" title="避障 · 左移绕板 + 双反馈" />
-        <div className="grid gap-6 lg:grid-cols-2">
+        {/* items-start + 视频固定下移 72px：让 P6 的视频顶边与 P5 **完全同高**
+            （72 = P5 里视频垂直居中后的上方留白 (495-351)/2；用居中会随左栏高度浮动，所以写死） */}
+        <div className="grid items-start gap-5 lg:grid-cols-2">
           <div className="space-y-6">
             <Card title="关键问题">
               <ul className="space-y-3">
@@ -502,11 +505,20 @@ function AvoidPage() {
             <Card title="左移双反馈调节">
               <ul className="space-y-3">
                 <Bullet>① 让『板/地分界线』保持水平。</Bullet>
-                <Bullet>② 超声距离反馈：提前 <b className="text-white/90">5cm</b> 进入，<br />左移时调整到与板 ~<b className="text-white/90">10cm</b>。</Bullet>
+                <Bullet>② 超声距离反馈：提前 <b className="text-white/90">5cm</b> 进入，左移时调整到与板 ~<b className="text-white/90">10cm</b>。</Bullet>
+              </ul>
+            </Card>
+            <Card title="分界线检测">
+              <ul className="space-y-3">
+                <Bullet>Canny 双阈值 <b className="text-white/90">40/120</b> 提边缘 → 概率霍夫拟合直线段。</Bullet>
+                <Bullet>只收 |倾角| &lt; <b className="text-white/90">30°</b> 的近水平线：顺带排除竖直的黑线与杂物边。</Bullet>
+                <Bullet>角度按线段长度加权平均（长线话语权大，抗单条杂物线干扰）。</Bullet>
               </ul>
             </Card>
           </div>
-          <VideoPanel src={avoidVideo} poster={posterAvoid} caption="左移避障 · 第一视角带标注画面（循环播放）" />
+          <div className="mt-[72px]">
+            <VideoPanel src={avoidVideo} poster={posterAvoid} caption="左移避障 · 第一视角带标注画面（循环播放）" />
+          </div>
         </div>
       </div>
     </div>
