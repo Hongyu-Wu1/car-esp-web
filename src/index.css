@@ -123,10 +123,14 @@
 /* 去掉键盘/点击操作时浏览器画的焦点白框（投影时不希望出现） */
 *:focus, *:focus-visible, video:focus, button:focus { outline: none !important; }
 
-/* P3 git 分支图：切到该页时按时间顺序"长出来"（main 逐渐延伸），20s 后定住
+/* P3 git 分支图：切到该页时按时间顺序"长出来"（main 逐渐延伸），10s 后定住
    gitSweep：揭示窗口随 main 前进（分支线与 main 同步延伸，不会超前） */
 @keyframes gitSweep { from { transform: translateX(var(--sweep, 0px)); } to { transform: translateX(0px); } }
 @keyframes gitFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* P4 文件树里无线链路的小 wifi 标：呼吸灯。最暗只到 0.45 —— 不能全灭，
+   否则那一段弧线的中点会"空一下"，看着像图缺了一块 */
+@keyframes wifiBreathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
 /* 通用卡片/细分隔线 */
 .hairline-t { border-top: 1px solid var(--hairline); }

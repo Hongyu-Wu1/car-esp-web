@@ -81,7 +81,8 @@ export default function FileTree() {
   boxes.push({ x: icon.x - 13, y: icon.y - 11, w: 26, h: 24 })   // wifi 标
 
   const WifiMark = ({ x, y, c }) => (
-    <g stroke={c} fill="none" strokeWidth={1.7} strokeLinecap="round">
+    <g stroke={c} fill="none" strokeWidth={1.7} strokeLinecap="round"
+      style={{ animation: 'wifiBreathe 2.6s ease-in-out infinite' }}>
       <path d={`M ${x - 9} ${y + 2} A 9 9 0 0 1 ${x + 9} ${y + 2}`} />
       <path d={`M ${x - 5.5} ${y + 2} A 5.5 5.5 0 0 1 ${x + 5.5} ${y + 2}`} />
       <path d={`M ${x - 2.2} ${y + 2} A 2.2 2.2 0 0 1 ${x + 2.2} ${y + 2}`} />

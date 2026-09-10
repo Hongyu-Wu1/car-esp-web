@@ -3,7 +3,7 @@
 //  颜色：绿=已并入 main；绿色虚线=部分吸收；黄=创新任务；红=断头/被放弃
 //  高度：绿离 main 最近，黄次之，红最远
 //
-//  动画（切到本页播放，共 20s，播完定住）：
+//  动画（切到本页播放，共 10s，播完定住）：
 //    用一个随时间向右移动的裁剪窗口揭示全部线条 —— 窗口右沿 = main 的当前末端，
 //    所以分支线和 main 同步延伸、绝不会超过 main；分支名在"长到自身一半"时才出现。
 //
@@ -16,7 +16,7 @@ export default function GitGraph() {
   const MIN_GAP = 10      // 同日事件最小间距
   const mid = 78
   const H = 184           // viewBox 高
-  const DURATION = 20     // 动画总时长(s)
+  const DURATION = 10     // 动画总时长(s)
   const PAD = 12          // 揭示窗口两端余量（保证起点/HEAD 圆圈完整）
   const DATE_DX = 24      // 日期标签整体左移 3.5 个字母
 

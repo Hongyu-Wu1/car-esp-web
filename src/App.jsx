@@ -12,6 +12,43 @@ import posterLineReal from './assets/poster_demo_line_real.png'
 import posterAvoid from './assets/poster_demo_avoid.png'
 import posterStrike from './assets/poster_demo_strike.png'
 
+/* ---------- 交接给下一位同学：只改这里 ---------- */
+const NEXT_SLIDE = {
+  url: 'https://typermonkie.github.io/#top', // ← 换成同学的站点地址
+  label: 'typermonkie.github.io',            // 鼠标悬停提示里显示
+}
+
+/* 点圆环时才调用：预热对方站点。两条路一起走：
+   ① 同站点（例：同学把页面挂在你账号的子路径 hongyu-wu1.github.io/xxx/）→ speculationrules 的
+      prerender 能真的把对方页面提前渲染好，点进去是"瞬间"的；
+   ② 跨站点（github.io 之间算不同 site —— github.io 在 Public Suffix List 里，Chrome 至今不支持
+      跨站点 prerender，会打一条 console 警告）→ 退化成 preconnect + prefetch：只提前取回 HTML，
+      **不执行对方 JS**，所以没有统计脚本 / 自动播放这类副作用。
+   两条路都只在"点了圆环"之后才发生 —— 不点就什么都不做。 */
+function warmNextSlide() {
+  try {
+    const origin = new URL(NEXT_SLIDE.url).origin
+    const link = (rel, href, as) => {
+      const l = document.createElement('link')
+      l.rel = rel; l.href = href
+      if (as) l.as = as
+      if (rel === 'preconnect') l.crossOrigin = ''
+      document.head.appendChild(l)
+    }
+    link('preconnect', origin)
+    link('prefetch', NEXT_SLIDE.url, 'document')
+  } catch { /* 配置写错也不影响正常跳转 */ }
+  try {
+    if (document.querySelector('script[type="speculationrules"]')) return
+    const s = document.createElement('script')
+    s.type = 'speculationrules'
+    s.textContent = JSON.stringify({
+      prerender: [{ source: 'list', urls: [NEXT_SLIDE.url], eagerness: 'immediate' }],
+    })
+    document.head.appendChild(s)
+  } catch { /* 老浏览器不支持就靠上面那条 prefetch */ }
+}
+
 /* ---------- 通用小部件 ---------- */
 function PageHeader({ eyebrow, title }) {
   return (
@@ -437,7 +474,7 @@ function LinePage({ step = 0 }) {
   return (
     <div className="relative min-h-screen px-6 pt-12 pb-16 md:px-10">
       <div className="mx-auto max-w-6xl">
-        <PageHeader eyebrow="创新③ · 算法" title="巡线 · 种子连通域 + Otsu 自适应阈值" />
+        <PageHeader eyebrow="创新③ · 算法" title="巡线 · 黑线判定 + 方向控制 + 自动油门" />
         {/* items-center：右栏与滚轴视觉居中（行高由滚轴固定外框决定，换档不变 → 位置仍然不动） */}
         <div className="grid items-center gap-5 lg:grid-cols-2">
           <LineRoller step={step} />
@@ -503,6 +540,55 @@ function PushPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+/* ---------- 最后一页右下角的小圆环：点它 = 把画面交给下一位同学的站点 ----------
+   点下去：① warmNextSlide()（此刻才开始预热，对方页面才可能被加载）
+          ② 屏幕压黑，同时立刻跳走（RING_EXIT_MS = 0）
+   为什么"立刻跳"也不白屏：浏览器在新页面画出东西之前会一直显示**当前这页**，
+   而当前这页此刻已经是全黑 —— 那几百毫秒的加载时间观众看到的就是黑场。
+   想让"幕布落下"这个动作看得更清楚，把 RING_EXIT_MS 写成 ~250 即可。 */
+const RING_EXIT_MS = 0
+
+function NextRing() {
+  const [phase, setPhase] = useState('idle') // idle → going
+  const timer = useRef(null)
+
+  const go = useCallback(() => {
+    window.location.href = NEXT_SLIDE.url
+  }, [])
+
+  const onClick = useCallback(() => {
+    if (phase !== 'idle') return
+    warmNextSlide()
+    setPhase('going')
+    if (RING_EXIT_MS > 0) timer.current = window.setTimeout(go, RING_EXIT_MS)
+    else go()
+  }, [phase, go])
+
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  return (
+    <>
+      <button onClick={onClick} tabIndex={-1}
+        title={`进入 ${NEXT_SLIDE.label}`} aria-label={`进入 ${NEXT_SLIDE.label}`}
+        className="fixed bottom-4 right-4 z-30 h-[30px] w-[30px] opacity-50 transition-opacity duration-300 hover:opacity-100">
+        <svg viewBox="0 0 24 24" className="h-full w-full -rotate-90">
+          <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2" className="stroke-white/35" />
+          <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2" strokeLinecap="round" className="stroke-accent"
+            style={{
+              strokeDasharray: 56.5,
+              strokeDashoffset: phase === 'idle' ? 56.5 : 0,
+              transition: 'stroke-dashoffset 200ms linear',
+            }} />
+        </svg>
+      </button>
+
+      {/* 黑幕：点过之后立刻全黑，盖住"浏览器加载新页面"的那几百毫秒 */}
+      <div className="pointer-events-none fixed inset-0 z-40 bg-[#050607] transition-opacity duration-200"
+        style={{ opacity: phase === 'idle' ? 0 : 1 }} />
+    </>
   )
 }
 
@@ -576,6 +662,9 @@ export default function App() {
         className="fixed left-0 top-0 z-10 h-full w-1/2 cursor-pointer" tabIndex={-1} />
       <button onClick={advance} aria-label="下一页"
         className="fixed right-0 top-0 z-10 h-full w-1/2 cursor-pointer" tabIndex={-1} />
+
+      {/* 最后一页才出现：右下角小圆环（点它把画面交给下一位同学的站点） */}
+      {page === pages.length - 1 && <NextRing />}
 
       {/* 左下角：按键翻页提示 */}
       <div className="fixed bottom-4 left-4 z-30 text-xs text-white/35">← → 翻页 · 空格下一页 · Home/End 首末</div>
