@@ -18,7 +18,7 @@
 - 自写轻量组件：`Particles`（2D 粒子场）、`GitGraph`（git 分支历史图）
 - 视频为独立文件（`import demo_line.mp4` → `dist/assets/*.mp4`）
 
-## 内容（8 页）
+## 内容（7 页）
 
 | 页 | 内容 |
 |---|---|
@@ -27,7 +27,6 @@
 | P3 | 创新① 项目管理（Git 分支历史图） |
 | P4 | 创新② 架构（ESP→WiFi→笔记本） |
 | P5–P7 | 创新③ 算法：巡线 / 避障 / 推球（各配循环视频） |
-| P8 | 总结 · 收获 |
 
 ## 运行 / 构建
 
@@ -47,7 +46,7 @@ npm run preview    # 本地预览构建产物
 
 ```
 src/
-  App.jsx            8 页内容 + 翻页逻辑
+  App.jsx            7 页内容 + 翻页逻辑
   index.css          主题（配色/排版/动效）
   components/        Particles · GitGraph
   assets/            车图 + 三段演示视频 + 缩略图

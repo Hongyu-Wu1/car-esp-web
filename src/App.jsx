@@ -314,45 +314,7 @@ function PushPage() {
   )
 }
 
-/* ---------- P8 总结 ---------- */
-const gains = [
-  '嵌入式 × CV × 控制的完整闭环',
-  '架构分层：感知 / 控制 / 状态机 / 编排 各司其职',
-  '用 git 管理多人在线协作 + 远端备份',
-  '真机踩坑 → 定位 → 修复（油门狂飙 / 舵机线松 / 掉线）',
-  '仿真 / 录播先验证，再上真机',
-]
-
-function SummaryPage() {
-  return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-16 pb-24 text-center">
-      <p className="eyebrow"><span />SUMMARY · Q&amp;A</p>
-      <h2 className="content-title mt-4">收获</h2>
-
-      <div className="mt-8 w-full max-w-3xl">
-        <Card title="主要收获">
-          <ul className="space-y-2.5">
-            {gains.map((g) => <Bullet key={g}>{g}</Bullet>)}
-          </ul>
-        </Card>
-      </div>
-
-      <p className="mt-8 max-w-3xl text-lg md:text-xl font-light leading-relaxed text-white/85">
-        『算法全部离载到笔记本，改逻辑不用烧固件；摄像头视觉 + 多状态机，
-        从循迹一路做到<GradientTextWrapper>自动双球入洞</GradientTextWrapper>。』
-      </p>
-
-      <p className="muted mt-8 text-xs tracking-[.2em]">谢谢 · 欢迎提问</p>
-      <p className="mt-2 text-xs text-white/60">第 16 组 · 沙也涵 / 王翊泽 / 吴泓谕</p>
-    </div>
-  )
-}
-
-function GradientTextWrapper({ children }) {
-  return <span className="text-accent">{children}</span>
-}
-
-const pages = [CoverPage, TocPage, ProjPage, ArchPage, LinePage, AvoidPage, PushPage, SummaryPage]
+const pages = [CoverPage, TocPage, ProjPage, ArchPage, LinePage, AvoidPage, PushPage]
 
 /* ---------- 主 App：翻页 ---------- */
 export default function App() {
