@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Particles from './components/Particles'
 import GitGraph from './components/GitGraph'
+import FileTree from './components/FileTree'
 import carImg from './assets/car.png'
 import lineVideo from './assets/demo_line.mp4'
 import avoidVideo from './assets/demo_avoid.mp4'
@@ -19,7 +20,14 @@ function PageHeader({ eyebrow, title }) {
   )
 }
 
-function Bullet({ children }) {
+function Bullet({ children, center = false }) {
+  if (center) {
+    return (
+      <li className="text-center text-white/80 text-sm md:text-[15px] leading-relaxed">
+        <span className="mr-1.5 text-accent">●</span>{children}
+      </li>
+    )
+  }
   return (
     <li className="flex gap-3">
       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_#62f1d1]" />
@@ -95,6 +103,7 @@ const toc = [
   { n: '①', title: '项目管理', desc: 'Git & GitHub 分支 / 提交管理，远端备份', tag: 'GIT', color: 'text-accent border-accent/40' },
   { n: '②', title: '架构', desc: 'ESP 采集执行 + 笔记本计算 & 实时显示\nC / py 分层', tag: 'ARCH', color: 'text-[#9b6cff] border-[#9b6cff]/40' },
   { n: '③', title: '算法', desc: '巡线 / 避障 / 推球\n自适应阈值 + 多反馈 + 动态 HSV', tag: 'VISION', color: 'text-[#ffd166] border-[#ffd166]/40' },
+  { n: '④', title: '创意功能', desc: '智能体接入\n手势控制', tag: 'AI', color: 'text-[#f472b6] border-[#f472b6]/40' },
 ]
 
 function TocPage() {
@@ -103,7 +112,7 @@ function TocPage() {
       <p className="eyebrow"><span />CONTENTS</p>
       <h2 className="content-title mt-4">目录</h2>
 
-      <div className="mt-10 grid w-full max-w-5xl gap-4 md:grid-cols-3">
+      <div className="mt-10 grid w-full max-w-4xl gap-4 md:grid-cols-2">
         {toc.map((t) => (
           <div key={t.n}
             className={`rounded-2xl border bg-white/[0.04] p-6 text-left backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.07] ${t.color}`}>
@@ -167,7 +176,7 @@ const flow = [
 
 function ArchPage() {
   return (
-    <div className="relative min-h-screen px-6 pt-20 pb-24 md:px-10">
+    <div className="relative min-h-screen px-6 pt-12 pb-16 md:px-10">
       <div className="mx-auto max-w-6xl">
         <PageHeader eyebrow="创新② · 架构" title="ESP 采集执行 + 笔记本计算显示" />
 
@@ -186,31 +195,23 @@ function ArchPage() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <Card title="遇到的主要问题">
-            <ul className="space-y-3">
-              <Bullet>反复烧录 / 串口不好读 → <b className="text-white/90">改算法不用烧固件</b>，报错一眼看到。</Bullet>
-              <Bullet>夜晚没真机也能调试 → 录播 + test&sim 仿真验证再上机。</Bullet>
-            </ul>
-          </Card>
-          <Card title="最后一个提交 · 文件关系树">
-            <pre className="overflow-x-auto whitespace-pre font-mono text-[.72rem] leading-relaxed text-white/75">
-{`main/   (C 固件)
-  app/     remote_b.c · main.c
-  comm/    wifi_link.c
-  motion/  motor_driver.c · servo.c
-  sensing/ camera.c · ultrasonic.c · wheel_encoder.c
-  display/ dashboard.c · tft.c
-
-py/     (笔记本 · 算法)
-  main.py            编排 / IO
-  wifi_link.py       网络(收包/重连/发送)
-  perception.py      帧 → 观测
-  task_controller.py 协调(FOLLOW→RAISE→PUSH)
-  record.py          展示 / 录像 / CSV
-  actions.py · vision.py · mode*.py
-  config.py · ball_vision.py · color_tune.py`}
-            </pre>
+        <div className="mt-5 grid gap-5 lg:grid-cols-[330px_minmax(0,1fr)]">
+          <div className="space-y-4">
+            <Card title="固件与算法分离">
+              <ul className="space-y-2">
+                <Bullet>MJPEG esp 解压：帧率 <b className="text-white/90">15fps</b>。</Bullet>
+                <Bullet>优化传输，电脑解压：帧率 <b className="text-white/90">25fps</b>，<br />达相机拍摄速度。</Bullet>
+              </ul>
+            </Card>
+            <Card title="录制：仿真 & 复盘">
+              <ul className="space-y-2">
+                <Bullet><code className="text-accent">sim/</code> 上线前仿真。</Bullet>
+                <Bullet><code className="text-accent">record.py</code> 实时看参数 +<br />CSV 数据复盘。</Bullet>
+              </ul>
+            </Card>
+          </div>
+          <Card title="文件结构">
+            <FileTree />
           </Card>
         </div>
       </div>
@@ -221,25 +222,30 @@ py/     (笔记本 · 算法)
 /* ---------- P5 创新③ 算法 · 巡线 ---------- */
 function LinePage() {
   return (
-    <div className="relative min-h-screen px-6 pt-20 pb-24 md:px-10">
+    <div className="relative min-h-screen px-6 pt-12 pb-16 md:px-10">
       <div className="mx-auto max-w-6xl">
         <PageHeader eyebrow="创新③ · 算法" title="巡线 · 种子连通域 + Otsu 自适应阈值" />
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <Card title="黑色线判定 · Otsu 自适应二值化">
-              <ul className="space-y-3">
-                <Bullet>阈值用『种子框』(车底窄带) 算，抗光照。</Bullet>
-                <Bullet>种子框对比度低 → 判丢线，不进 Otsu。</Bullet>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="space-y-4">
+            <Card title="黑线判定">
+              <ul className="space-y-2">
+                <Bullet>绿色线内做为 ROI，绿色线外画面不进入算法。</Bullet>
+                <Bullet>洋红色框选区域做为「种子域」，与其连通的最大黑色区域识别为黑线。</Bullet>
+                <Bullet>车轮、地砖缝隙、周围杂物、远处折回的黑线不干扰巡线。</Bullet>
               </ul>
             </Card>
-            <Card title="判向 · 种子连通域质心">
-              <ul className="space-y-3">
-                <Bullet>与种子框连通的线块 → 质心偏置。</Bullet>
-                <Bullet><code className="text-accent">offset</code> 位置误差 → 连续 P 控制；<code className="text-accent">bias</code> 整块质心 → 方向记忆(丢线按记忆转)。</Bullet>
+            <Card title="Otsu 自适应二值化">
+              <ul className="space-y-2">
+                <Bullet>先算「种子域」对比度 <code className="text-accent">std</code>，过低认为没有黑线，进入丢线状态。</Bullet>
+                <Bullet>对比度达标则自动在黑白双灰度峰之间找到阈值 <code className="text-accent">Otsu thr</code>。</Bullet>
+                <Bullet>算法不受光照变化和板子逐渐被踩黑影响。</Bullet>
               </ul>
             </Card>
-            <Card title="关键问题">
-              <Bullet>光照 / 地面干净程度不固定 → Otsu 自适应(不用固定阈值) + 对比度兜底。</Bullet>
+            <Card title="判断方向">
+              <ul className="space-y-2">
+                <Bullet>车偏：用车前区域黑线重心，连续 P 控制，偏移大修正力度大。</Bullet>
+                <Bullet>记忆：用 ROI 内黑线重心做为丢线后找线依据。</Bullet>
+              </ul>
             </Card>
           </div>
           <VideoPanel src={lineVideo} poster={posterLine} caption="巡线 · 第一视角带标注画面（循环播放）" />

@@ -77,39 +77,42 @@ export default function GitGraph() {
 
   const chainY = mid - D_GREEN
   const chain = [
-    { label: 'feat/line-follow', x0: X('lf_fork'), x1: X('sv_fork'), dashed: true },
-    { label: 'simple-version', x0: X('sv_fork'), x1: svTipX, dashed: true },
-    { label: 'weekone', x0: svTipX, x1: X('wk_merge'), dashed: false },
+    { label: 'feat/line-follow', x0: X('lf_fork'), x1: X('sv_fork'), dashed: true, who: 'HW' },
+    { label: 'simple-version', x0: X('sv_fork'), x1: svTipX, dashed: true, who: 'HW' },
+    { label: 'weekone', x0: svTipX, x1: X('wk_merge'), dashed: false, who: 'TM' },
   ]
 
   const arms = [
-    { label: 'no-wifi-speed-feedback', side: 1, depth: D_RED, a: 'nw_fork', b: 'nw_tip', merge: false, color: RED },
-    { label: 'feat-camera-line-follow', side: 1, depth: D_GREEN, a: 'cam_fork', b: 'cam_merge', merge: true, color: GREEN, dx: -7 },
-    { label: 'seed-camera-follow', side: -1, depth: D_GREEN, a: 'seed_fork', b: 'seed_tip', merge: true, color: GREEN, labelBelow: true },
-    { label: 'color-tune-push-hsv', side: -1, depth: D_GREEN_FAR, a: 'ct_fork', b: 'ct_merge', merge: true, color: GREEN },
-    { label: 'feat-follow-line-and-kick-ball', side: -1, depth: D_GREEN, a: 'kb_fork', b: 'kb_merge', merge: true, color: GREEN, anchor: 'end', dx: -7 },
-    { label: 'host', side: 1, depth: D_RED, a: 'host_fork', b: 'host_tip', merge: false, color: RED },
-    { label: 'codex/ai-companion', side: 1, depth: D_YELLOW, a: 'codex_fork', b: 'codex_tip', merge: false, color: YELLOW },
-    { label: 'feat/gesture-remote', side: -1, depth: D_YELLOW, a: 'gest_fork', b: 'gest_tip', merge: false, color: YELLOW },
+    { label: 'no-wifi-speed-feedback', side: 1, depth: D_RED, a: 'nw_fork', b: 'nw_tip', merge: false, color: RED, who: 'HW' },
+    { label: 'feat-camera-line-follow', side: 1, depth: D_GREEN, a: 'cam_fork', b: 'cam_merge', merge: true, color: GREEN, dx: -7, who: 'HW' },
+    { label: 'seed-camera-follow', side: -1, depth: D_GREEN, a: 'seed_fork', b: 'seed_tip', merge: true, color: GREEN, labelBelow: true, who: 'TM' },
+    { label: 'color-tune-push-hsv', side: -1, depth: D_GREEN_FAR, a: 'ct_fork', b: 'ct_merge', merge: true, color: GREEN, who: 'PY' },
+    { label: 'feat-follow-line-and-kick-ball', side: -1, depth: D_GREEN, a: 'kb_fork', b: 'kb_merge', merge: true, color: GREEN, anchor: 'end', dx: -7, who: 'HW' },
+    { label: 'host', side: 1, depth: D_RED, a: 'host_fork', b: 'host_tip', merge: false, color: RED, who: 'TM' },
+    { label: 'codex/ai-companion', side: 1, depth: D_YELLOW, a: 'codex_fork', b: 'codex_tip', merge: false, color: YELLOW, who: 'TM' },
+    { label: 'feat/gesture-remote', side: -1, depth: D_YELLOW, a: 'gest_fork', b: 'gest_tip', merge: false, color: YELLOW, who: 'PY' },
   ]
 
   // 标签：在"分支线长到一半"时出现 → 即 main 走到该分支中点时
   const labels = []
-  chain.forEach((s) => labels.push({ text: s.label, x: (s.x0 + s.x1) / 2, y: chainY - 8, anchor: 'middle', color: GREEN, size: 12, at: (s.x0 + s.x1) / 2 }))
+  chain.forEach((s, i) => labels.push({ text: s.label, who: s.who, x: (s.x0 + s.x1) / 2, y: i === 1 ? chainY + 15 : chainY - 8, anchor: 'middle', color: GREEN, size: 12, at: (s.x0 + s.x1) / 2 }))
   arms.forEach((a) => {
     const y = mid + a.side * a.depth
     const labelY = a.labelBelow ? y + 15 : (a.side === -1 ? y - 9 : y + 17)
     const anchor = a.anchor || 'middle'
     const ax = X(a.a); const bx = X(a.b)
     const lx = (anchor === 'end' ? bx : (ax + bx) / 2) + (a.dx || 0)
-    labels.push({ text: a.label, x: lx, y: labelY, anchor, color: a.color, size: 12, at: (ax + bx) / 2 })
+    labels.push({ text: a.label, who: a.who, x: lx, y: labelY, anchor, color: a.color, size: 12, at: (ax + bx) / 2 })
   })
   dateLabels.forEach((d) => labels.push({ text: d.d, x: d.x - DATE_DX, y: mid + 15, anchor: 'middle', color: '#8b98a5', size: 10.5, at: d.x }))
 
+  // 文字宽度估算（含白色创建者后缀），用于定位与遮罩
+  const cw = (size) => size * 0.56
   const box = (l) => {
-    const w = l.text.length * (l.size * 0.55) + 8
+    const chars = l.text.length + (l.who ? l.who.length : 0)
+    const w = chars * cw(l.size)
     const x0 = l.anchor === 'end' ? l.x - w : l.anchor === 'start' ? l.x : l.x - w / 2
-    return { x0, y0: l.y - l.size * 0.9, w, h: l.size * 1.15 }
+    return { x0, w, y0: l.y - l.size * 0.9, h: l.size * 1.15 }
   }
 
   return (
@@ -121,7 +124,7 @@ export default function GitGraph() {
           <rect x="0" y="0" width="1000" height={H} fill="#fff" />
           {labels.map((l, i) => {
             const b = box(l)
-            return <rect key={i} x={b.x0} y={b.y0} width={b.w} height={b.h} fill="#000" />
+            return <rect key={i} x={b.x0 - 5} y={b.y0} width={b.w + 10} height={b.h} fill="#000" />
           })}
         </mask>
         {/* 揭示窗口：右沿 ≈ main 当前末端，随时间向右移动；两端各留 PAD 让起点/HEAD 圆圈完整 */}
@@ -171,7 +174,9 @@ export default function GitGraph() {
       <text x={X0 - 10} y={mid - 12} fill="#f4f7f8" fontSize={13} fontWeight={600} textAnchor="end" style={fade(X0)}>main</text>
       <text x={maxX} y={mid - 14} fill="#f4f7f8" fontSize={12} fontWeight={600} textAnchor="middle" style={fade(maxX, 0.6)}>HEAD</text>
       {labels.map((l, i) => (
-        <text key={i} x={l.x} y={l.y} fill={l.color} fontSize={l.size} fontWeight={500} textAnchor={l.anchor} style={fade(l.at)}>{l.text}</text>
+        <text key={i} x={l.x} y={l.y} fill={l.color} fontSize={l.size} fontWeight={500} textAnchor={l.anchor} style={fade(l.at)}>
+          {l.text}{l.who ? <tspan fill="#ffffff">{l.who}</tspan> : null}
+        </text>
       ))}
     </svg>
   )
