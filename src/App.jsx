@@ -4,9 +4,11 @@ import GitGraph from './components/GitGraph'
 import FileTree from './components/FileTree'
 import carImg from './assets/car.png'
 import lineVideo from './assets/demo_line.mp4'
+import lineRealVideo from './assets/demo_line_real.mp4'
 import avoidVideo from './assets/demo_avoid.mp4'
 import strikeVideo from './assets/demo_strike.mp4'
 import posterLine from './assets/poster_demo_line.png'
+import posterLineReal from './assets/poster_demo_line_real.png'
 import posterAvoid from './assets/poster_demo_avoid.png'
 import posterStrike from './assets/poster_demo_strike.png'
 
@@ -249,7 +251,13 @@ function LinePage() {
               </ul>
             </Card>
           </div>
-          <VideoPanel src={lineVideo} poster={posterLine} caption="巡线 · 第一视角带标注画面（循环播放）" />
+          <div className="space-y-4">
+            <VideoPanel src={lineVideo} poster={posterLine} caption="巡线 · 第一视角带标注画面（循环播放）" />
+            {/* 真机实录：源视频 1~21s 切出，放在上面的视频下方循环播放（尺寸收小以守住「一页一屏」） */}
+            <div className="mx-auto w-full max-w-[440px]">
+              <VideoPanel src={lineRealVideo} poster={posterLineReal} caption="真机实录 · 第三人称全程（循环播放）" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

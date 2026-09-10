@@ -49,7 +49,7 @@ src/
   App.jsx            7 页内容 + 翻页逻辑
   index.css          主题（配色/排版/动效）
   components/        Particles · GitGraph
-  assets/            车图 + 三段演示视频 + 缩略图
+  assets/            车图 + 四段演示视频 + 缩略图
 index.html           页面壳
 .github/workflows/deploy.yml   GitHub Pages 发布
 ```
