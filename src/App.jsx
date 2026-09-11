@@ -62,7 +62,7 @@ function PageHeader({ eyebrow, title }) {
 function Bullet({ children, center = false }) {
   if (center) {
     return (
-      <li className="text-center text-white/80 text-[15px] md:text-[16.5px] leading-relaxed">
+      <li className="text-center text-white/80 text-[0.9375rem] md:text-[1.03125rem] leading-relaxed">
         <span className="mr-1.5 text-accent">●</span>{children}
       </li>
     )
@@ -70,7 +70,7 @@ function Bullet({ children, center = false }) {
   return (
     <li className="flex gap-3">
       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_#62f1d1]" />
-      <span className="text-white/80 text-[15px] md:text-[16.5px] leading-relaxed">{children}</span>
+      <span className="text-white/80 text-[0.9375rem] md:text-[1.03125rem] leading-relaxed">{children}</span>
     </li>
   )
 }
@@ -78,7 +78,7 @@ function Bullet({ children, center = false }) {
 function Card({ title, children, className = '' }) {
   return (
     <div className={`rounded-2xl border border-white/10 bg-white/[0.04] p-5 md:p-6 backdrop-blur ${className}`}>
-      {title && <h3 className="mb-3 text-base md:text-[17px] font-semibold tracking-[0.12em] text-accent">{title}</h3>}
+      {title && <h3 className="mb-3 text-base md:text-[1.0625rem] font-semibold tracking-[0.12em] text-accent">{title}</h3>}
       {children}
     </div>
   )
@@ -104,10 +104,10 @@ function CoverPage() {
 
       {/* 顶部品牌 */}
       <div className="absolute top-6 left-8 z-10 flex items-center gap-3 text-[.76rem] font-semibold tracking-[.25em] text-white/80">
-        <span className="inline-flex h-[24px] items-end gap-[3px]" style={{ transform: 'skewY(-16deg)' }} aria-hidden="true">
-          <i className="block h-[45%] w-[7px] border border-current" />
-          <i className="block h-[68%] w-[7px] border border-accent bg-accent" />
-          <i className="block h-full w-[7px] border border-current" />
+        <span className="inline-flex h-[1.5rem] items-end gap-[0.1875rem]" style={{ transform: 'skewY(-16deg)' }} aria-hidden="true">
+          <i className="block h-[45%] w-[0.4375rem] border border-current" />
+          <i className="block h-[68%] w-[0.4375rem] border border-accent bg-accent" />
+          <i className="block h-full w-[0.4375rem] border border-current" />
         </span>
         <span>esp智能车</span>
       </div>
@@ -234,7 +234,7 @@ function ArchPage() {
           ))}
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[372px_minmax(0,1fr)]">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[23.25rem_minmax(0,1fr)]">
           <div className="space-y-4">
             <Card title="固件与算法分离">
               <ul className="space-y-2">
@@ -265,6 +265,16 @@ function ArchPage() {
 const LINE_GAP = 10
 const LINE_PEEK = 80
 const LINE_FALLBACK_H = 200 // 首帧兜底，量到真实高度前用
+
+/* ---------- 大屏等比缩放（与 index.css 里 html{font-size:max(16px,min(1vw,1.7778vh))} 同一个公式） ----------
+   1600×900 上 deckUnit() 返回 16；屏幕更大时按"更紧的那一边"变大，deckUnit()/16 就是整页的放大倍数。
+   滚轴的间距 / 露出量 / 兜底栏高是 JS 算出来的，必须跟着换算，否则大屏上只有文字变大、栏间距不变。
+   ⚠️ 改公式要连 index.css 那条 html 规则一起改。 */
+function deckUnit() {
+  return Math.max(16, Math.min(window.innerWidth / 100, window.innerHeight / 56.25))
+}
+/* 设计稿 px（1600×900 基准）→ 当前屏幕 px */
+const dp = (designPx) => (designPx * deckUnit()) / 16
 
 /* 由四栏实测高度算出：每栏的轨道 y 偏移 off[]、每档的窗口高 view[]
    peek = "下一栏露出来的高度"，默认用 P5 的 LINE_PEEK；P7 传自己的（见 PUSH_PEEK） */
@@ -370,12 +380,15 @@ const LINE_CARDS = [
 /* ---------- P5 滚轴：每栏自适应高度，整条轨道按实测偏移上下平移 + 每栏按位置绕 X 轴倾斜 ---------- */
 function LineRoller({ step }) {
   const itemRefs = useRef([])
-  const [heights, setHeights] = useState(() => LINE_CARDS.map(() => LINE_FALLBACK_H))
+  const [unit, setUnit] = useState(deckUnit) // 当前根字号 = 大屏放大倍数；变了要重渲染，r() 才会用新值
+  const r = (px) => (px * unit) / 16 // 设计稿 px → 当前屏幕 px
+  const [heights, setHeights] = useState(() => LINE_CARDS.map(() => dp(LINE_FALLBACK_H)))
 
   /* 量每栏真实高度（栏高由内容决定，不能写死），窗口尺寸和滚动位移都跟着它走 */
   useLayoutEffect(() => {
     const measure = () => {
-      const hs = itemRefs.current.map((el, i) => (el ? el.offsetHeight : LINE_FALLBACK_H))
+      setUnit(deckUnit())
+      const hs = itemRefs.current.map((el, i) => (el ? el.offsetHeight : dp(LINE_FALLBACK_H)))
       setHeights((prev) => (prev.length === hs.length && prev.every((v, i) => v === hs[i]) ? prev : hs))
     }
     measure()
@@ -385,16 +398,16 @@ function LineRoller({ step }) {
     return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
   }, [])
 
-  const { off, view } = lineGeom(heights)
+  const { off, view } = lineGeom(heights, r(LINE_PEEK))
   const frameH = Math.max(...view) // 外框固定：行高不随档位变 → 右边的视频/代码一动不动
-  const fade = 'linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 26px), transparent 100%)'
+  const fade = `linear-gradient(to bottom, transparent 0, #000 ${r(16)}px, #000 calc(100% - ${r(26)}px), transparent 100%)`
   return (
     <div style={{ height: frameH }}>
       <div
         className="relative overflow-hidden"
         style={{
           height: view[step], // 窗口只跟着自己的内容收放（贴顶），不再影响右边
-          perspective: '1500px',
+          perspective: `${r(1500)}px`,
           maskImage: fade,
           WebkitMaskImage: fade,
           transition: 'height 720ms cubic-bezier(.22,.9,.24,1)',
@@ -403,7 +416,7 @@ function LineRoller({ step }) {
         <div
           className="flex flex-col"
           style={{
-            gap: LINE_GAP,
+            gap: r(LINE_GAP),
             transform: `translateY(${-off[step]}px)`,
             transformStyle: 'preserve-3d',
             transition: 'transform 720ms cubic-bezier(.22,.9,.24,1)',
@@ -427,7 +440,7 @@ function LineRoller({ step }) {
                 transition: 'transform 720ms cubic-bezier(.22,.9,.24,1), opacity 720ms ease',
               }}
             >
-              <Card title={c.title} className={c.placeholder ? 'min-h-[104px]' : ''}>
+              <Card title={c.title} className={c.placeholder ? 'min-h-[6.5rem]' : ''}>
                 {c.bullets.length > 0 && (
                   <ul className="space-y-2">
                     {c.bullets.map((b, k) => <Bullet key={k}>{b}</Bullet>)}
@@ -456,7 +469,7 @@ function LineStage({ step }) {
     <figure className="relative z-20 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl">
       <div className="aspect-video w-full">
         {step === 2 ? (
-          <pre className="flex h-full w-full items-center overflow-hidden px-4 font-mono text-[10px] leading-[1.6] whitespace-pre-wrap xl:text-[11px] xl:leading-[1.62]">
+          <pre className="flex h-full w-full items-center overflow-hidden px-4 font-mono text-[0.625rem] leading-[1.6] whitespace-pre-wrap xl:text-[0.6875rem] xl:leading-[1.62]">
             <code>{tokenizePython(ANTI_STALL_CODE).map((t, i) => <span key={i} className={t.cls}>{t.t}</span>)}</code>
           </pre>
         ) : (
@@ -517,7 +530,7 @@ function AvoidPage() {
               </ul>
             </Card>
           </div>
-          <div className="mt-[72px]">
+          <div className="mt-[4.5rem]">
             <VideoPanel src={avoidVideo} poster={posterAvoid} caption="左移避障 · 第一视角带标注画面（循环播放）" />
           </div>
         </div>
@@ -556,7 +569,7 @@ const PUSH_CARDS = [
       <>状态机思维：通过八个 FSM 控制小车行为状态。</>,
       <>
         三点一线：确保小球球心、洞口中心均处于小车中线邻域。
-        <span className="mt-1 block space-y-0.5 text-[14px] leading-relaxed text-white/55 md:text-[15px]">
+        <span className="mt-1 block space-y-0.5 text-[0.875rem] leading-relaxed text-white/55 md:text-[0.9375rem]">
           <span className="block">· 设 <code className="text-accent">PUSH_BALL_CLOSE = 0.70</code> 防“假丢球”</span>
           <span className="block">· 预留 500ms 原地右转，执行下一个找球逻辑</span>
         </span>
@@ -583,11 +596,14 @@ const PUSH_PEEK = 44
    刻意**不动 P5 的 LineRoller**，避免影响已经定稿的 P5。 */
 function PushRoller({ step }) {
   const itemRefs = useRef([])
-  const [heights, setHeights] = useState(() => PUSH_CARDS.map(() => LINE_FALLBACK_H))
+  const [unit, setUnit] = useState(deckUnit)
+  const r = (px) => (px * unit) / 16
+  const [heights, setHeights] = useState(() => PUSH_CARDS.map(() => dp(LINE_FALLBACK_H)))
 
   useLayoutEffect(() => {
     const measure = () => {
-      const hs = itemRefs.current.map((el, i) => (el ? el.offsetHeight : LINE_FALLBACK_H))
+      setUnit(deckUnit())
+      const hs = itemRefs.current.map((el, i) => (el ? el.offsetHeight : dp(LINE_FALLBACK_H)))
       setHeights((prev) => (prev.length === hs.length && prev.every((v, i) => v === hs[i]) ? prev : hs))
     }
     measure()
@@ -597,16 +613,16 @@ function PushRoller({ step }) {
     return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
   }, [])
 
-  const { off, view } = lineGeom(heights, PUSH_PEEK)
+  const { off, view } = lineGeom(heights, r(PUSH_PEEK))
   const frameH = Math.max(...view) // 外框固定：右边的视频/代码一动不动
-  const fade = 'linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 26px), transparent 100%)'
+  const fade = `linear-gradient(to bottom, transparent 0, #000 ${r(16)}px, #000 calc(100% - ${r(26)}px), transparent 100%)`
   return (
     <div style={{ height: frameH }}>
       <div
         className="relative overflow-hidden"
         style={{
           height: view[step],
-          perspective: '1500px',
+          perspective: `${r(1500)}px`,
           maskImage: fade,
           WebkitMaskImage: fade,
           transition: 'height 720ms cubic-bezier(.22,.9,.24,1)',
@@ -615,7 +631,7 @@ function PushRoller({ step }) {
         <div
           className="flex flex-col"
           style={{
-            gap: LINE_GAP,
+            gap: r(LINE_GAP),
             transform: `translateY(${-off[step]}px)`,
             transformStyle: 'preserve-3d',
             transition: 'transform 720ms cubic-bezier(.22,.9,.24,1)',
@@ -638,7 +654,7 @@ function PushRoller({ step }) {
                   transition: 'transform 720ms cubic-bezier(.22,.9,.24,1), opacity 720ms ease',
                 }}
               >
-                <Card title={c.title} className={c.placeholder ? 'min-h-[104px]' : ''}>
+                <Card title={c.title} className={c.placeholder ? 'min-h-[6.5rem]' : ''}>
                   {c.bullets.length > 0 && (
                     <ul className="space-y-2">
                       {c.bullets.map((b, k) => <Bullet key={k}>{b}</Bullet>)}
@@ -765,7 +781,7 @@ function PushFsm() {
 }
 
 /* 右侧：上 = 视频（固定不动，换档不重挂 → 一直循环播放），下 = 与档位对应的源码 / 状态机。
-   两个框都用**定死的固定尺寸**（视频 aspect-video、代码框 PUSH_CODE_H），换档时框的位置和大小逐位不变（同 P5 那条性质）。 */
+   两个框都用**定死的固定尺寸**（视频 aspect-video、代码框 h-[10rem]），换档时框的位置和大小逐位不变（同 P5 那条性质）。 */
 /* 两段源码是从 docx 里那两张代码截图抄下来的原文，用 **P5 同款**的 PY_RULES 高亮渲染成文字
    （比塞图片清楚：docx 图 1174px 宽缩到这一列只有 9~10px 的图内字号）。
    只有第 2 行的注释压成了 `# BGR -> HSV`：docx 里那截"（本项目 HSV 化的唯一入口）"会把整行挤到换行。 */
@@ -787,9 +803,6 @@ const PUSH_CODE = [
   { code: HUE_RING_CODE, caption: '识别源码 · _hue_ring_dist()：色相按环形算距离，搬进 [-90, 90]' },
 ]
 
-/* 代码框固定高：9 行的 hue_mask 放得下，2 行的 _hue_ring_dist 上下居中 → 换档时框不动 */
-const PUSH_CODE_H = 160
-
 function PushStage({ step }) {
   const fsm = step === 2
   const code = PUSH_CODE[fsm ? 0 : step] // 档2 只留位（invisible）撑住容器高度，用第 0 段即可
@@ -806,8 +819,7 @@ function PushStage({ step }) {
         <figure className="relative z-20 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl">
           {/* whitespace-pre + overflow-x-auto：这几行代码比 P5 的长，宁可横向滚也不换行（换行会把固定框挤爆）。
               xl 用 10.5px 而不是 P5 的 11px：hue_mask 最长那行 76 字符，11px 实测 539px > 框内 532px 会出横向滚动条 */}
-          <pre className="flex w-full items-center overflow-x-auto px-4 font-mono text-[10px] leading-[1.6] whitespace-pre xl:text-[10.5px] xl:leading-[1.62]"
-            style={{ height: PUSH_CODE_H }}>
+          <pre className="flex h-[10rem] w-full items-center overflow-x-auto px-4 font-mono text-[0.625rem] leading-[1.6] whitespace-pre xl:text-[0.65625rem] xl:leading-[1.62]">
             <code>{tokenizePython(code.code).map((t, i) => <span key={i} className={t.cls}>{t.t}</span>)}</code>
           </pre>
           <figcaption className="px-4 py-2 text-center text-xs text-white/50">{code.caption}</figcaption>
@@ -828,7 +840,7 @@ function PushStage({ step }) {
 function PushPage({ step = 0 }) {
   return (
     /* 为了压进 1366×768 的投影（整页实测 751px），这一页跟 P5/P6 有三处不同：
-       ① 右栏**不再往下挪 72px**（P6 那个 mt-[72px] 是为了视频顶边对齐，这里放弃对齐换高度）；
+       ① 右栏**不再往下挪 72px**（P6 那个 mt-[4.5rem] 是为了视频顶边对齐，这里放弃对齐换高度）；
        ② pb-16 → pb-4（纯底部留白，内容位置不变）；
        ③ 滚轮"下一栏"露出量 80 → PUSH_PEEK 44、代码框高 160。
        代价：P7 的视频顶边比 P5/P6 高 72px。 */
@@ -874,7 +886,7 @@ function NextRing() {
     <>
       <button onClick={onClick} tabIndex={-1}
         title={`进入 ${NEXT_SLIDE.label}`} aria-label={`进入 ${NEXT_SLIDE.label}`}
-        className="fixed bottom-4 right-4 z-30 h-[30px] w-[30px] opacity-50 transition-opacity duration-300 hover:opacity-100">
+        className="fixed bottom-4 right-4 z-30 h-[1.875rem] w-[1.875rem] opacity-50 transition-opacity duration-300 hover:opacity-100">
         <svg viewBox="0 0 24 24" className="h-full w-full -rotate-90">
           <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2" className="stroke-white/35" />
           <circle cx="12" cy="12" r="9" fill="none" strokeWidth="2" strokeLinecap="round" className="stroke-accent"

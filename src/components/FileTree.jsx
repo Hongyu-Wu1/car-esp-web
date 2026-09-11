@@ -91,7 +91,7 @@ export default function FileTree() {
   )
 
   return (
-    <svg viewBox="0 0 710 300" className="mx-auto h-auto w-full max-w-[820px] select-none" role="img"
+    <svg viewBox="0 0 710 300" className="mx-auto h-auto w-full max-w-[51.25rem] select-none" role="img"
       aria-label="文件结构树：main/ 固件（app、motion、sensing、display、comm 及其 .c 文件）与 py/ 算法（main.py 调用 wifi_link、perception、task_controller、record，后者再调用 vision、ball_vision、mode、actions；另有 config.py）；comm 与 wifi_link 之间有无线链路">
       <defs>
         <mask id="ftMask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="710" height="300">

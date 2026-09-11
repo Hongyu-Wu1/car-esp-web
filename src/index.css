@@ -18,6 +18,17 @@
   color-scheme: dark;
 }
 
+/* 大屏自适应（设计基准 1600×900 → 根字号 16px）
+   1vw = 屏宽/100，1.7778vh = 屏高/56.25 —— 在 1600×900 上两者都恰好是 16px，
+   取 min() 就是按"更紧的那一边"等比放大；max(16px, …) 表示**只放大、不缩小**：
+     · ≤1600×900 的小窗口：维持原来的响应式布局（<1024 堆叠、可滚动），行为和以前完全一样
+     · 大屏 / 投影：整页（字号、卡片、视频、间距）等比变大，填满屏幕，不再挤在屏幕上部中间
+   做法和参考站 typermonkie 一致（他用 clamp()+vw/vh，这里用一个根字号倍数统一驱动）。
+   ⚠️ App.jsx 里 deckUnit() / dp() 用的是**同一个公式**（滚轴间距是 JS 算的），改这里要一起改。 */
+html {
+  font-size: max(16px, min(1vw, 1.7777778vh));
+}
+
 @layer base {
   html { scroll-behavior: smooth; }
   body {
@@ -33,7 +44,7 @@
 
 /* 翻页淡入过渡 */
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateX(28px); }
+  from { opacity: 0; transform: translateX(1.75rem); }
   to   { opacity: 1; transform: none; }
 }
 .page-enter { animation: pageEnter 0.45s ease-out; }
@@ -49,7 +60,7 @@
     linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     var(--bg);
-  background-size: auto, 92px 92px, 92px 92px, auto;
+  background-size: auto, 5.75rem 5.75rem, 5.75rem 5.75rem, auto;
   background-position: center;
 }
 
@@ -62,8 +73,8 @@
   pointer-events: none;
   z-index: 0;
 }
-.ambient-one { width: min(76vw, 1040px); aspect-ratio: 1; animation: orbit 34s linear infinite; }
-.ambient-two { width: min(48vw, 650px); aspect-ratio: 1; border-style: dashed; animation: orbit 26s linear infinite reverse; }
+.ambient-one { width: min(76vw, 65rem); aspect-ratio: 1; animation: orbit 34s linear infinite; }
+.ambient-two { width: min(48vw, 40.625rem); aspect-ratio: 1; border-style: dashed; animation: orbit 26s linear infinite reverse; }
 @keyframes orbit { to { transform: rotate(360deg); } }
 
 /* eyebrow：小号大字距标签 + 呼吸圆点 */
@@ -71,7 +82,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 11px;
+  gap: 0.6875rem;
   color: var(--muted);
   font-size: clamp(0.68rem, 0.82vw, 0.78rem);
   font-weight: 500;
@@ -79,11 +90,11 @@
 }
 .eyebrow.left { justify-content: flex-start; }
 .eyebrow span {
-  width: 5px;
-  height: 5px;
+  width: 0.3125rem;
+  height: 0.3125rem;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 16px var(--accent);
+  box-shadow: 0 0 1rem var(--accent);
   animation: pulse 2.5s ease-in-out infinite;
 }
 @keyframes pulse { 50% { opacity: 0.3; transform: scale(0.72); } }
@@ -95,7 +106,7 @@
   font-weight: 300;
   letter-spacing: -0.05em;
   text-wrap: balance;
-  text-shadow: 0 0 42px color-mix(in srgb, var(--bg) 88%, transparent), 0 0 80px color-mix(in srgb, var(--bg) 72%, transparent);
+  text-shadow: 0 0 2.625rem color-mix(in srgb, var(--bg) 88%, transparent), 0 0 5rem color-mix(in srgb, var(--bg) 72%, transparent);
 }
 .content-title {
   font-size: clamp(1.9rem, 4.6vw, 3.6rem);
