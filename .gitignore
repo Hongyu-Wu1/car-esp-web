@@ -5,3 +5,5 @@ dist-ssr
 .DS_Store
 # 项目记忆文档（本地自用，不入库不发布）
 memory.md
+# docx 素材（如 src/assets/推球(1).docx）：文案/代码图已经抄进 App.jsx，构建用不到，公开仓库不入库
+*.docx
