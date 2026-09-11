@@ -553,7 +553,7 @@ const PUSH_CARDS = [
     title: '推球入洞 · 主体逻辑',
     bullets: [
       <>巡线结束后由舵机接管，进入推球流程。</>,
-      <>状态机思维：通过六个 FSM 控制小车行为状态。</>,
+      <>状态机思维：通过八个 FSM 控制小车行为状态。</>,
       <>
         三点一线：确保小球球心、洞口中心均处于小车中线邻域。
         <span className="mt-1 block space-y-0.5 text-[14px] leading-relaxed text-white/55 md:text-[15px]">
@@ -654,7 +654,7 @@ function PushRoller({ step }) {
   )
 }
 
-/* ---------- P7 档2：六个 FSM 状态机（docx 竖版状态机图的横向重画） ---------- */
+/* ---------- P7 档2：八个 FSM 状态机（docx 竖版状态机图的横向重画） ---------- */
 /* 为什么重画：docx 那张图是 709×1281 的竖图，塞进这一列（约 566 宽）只有 170 多 px 宽，字完全看不清。
    控制线按 docx 原图画全：**实线 = 判据满足继续往下走；虚线 = elif 分支 / 回边**（原地自转、球丢球歪、循环性对准）。
    坐标都在 566×542 的 viewBox 里，改一处要连着看相邻的线和标签。 */
@@ -703,7 +703,7 @@ const FSM_LABELS = [
 function PushFsm() {
   return (
     <svg viewBox="0 0 566 542" className="h-full w-full" role="img"
-      aria-label="推球入洞状态机：SEARCH 到 DONE 六个 FSM，含 elif 分支与循环性对准">
+      aria-label="推球入洞状态机：SEARCH 到 DONE 八个 FSM，含 elif 分支与循环性对准">
       <defs>
         <marker id="fsmArrow" markerUnits="userSpaceOnUse" viewBox="0 0 9 9" refX="9" refY="4.5"
           markerWidth="9" markerHeight="9" orient="auto">
@@ -716,7 +716,7 @@ function PushFsm() {
       </defs>
 
       <text x="4" y="14" fontSize="11.5" fontWeight="600" fill="#62f1d1" letterSpacing="0.5">
-        推球入洞 · 六个 FSM 状态机
+        推球入洞 · 八个 FSM 状态机
       </text>
       <text x="562" y="14" fontSize="9.5" fill="rgba(255,255,255,0.45)" textAnchor="end">
         ★ = 关键判据
